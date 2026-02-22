@@ -1,0 +1,14 @@
+pandas
+openpyxl
+selenium
+webdriver-manager
+python-dotenv
+duckduckgo-search
+folium
+geopy
+openai
+google-generativeai
+branca
+geopy
+streamlit
+streamlit-folium
