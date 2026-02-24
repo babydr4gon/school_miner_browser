@@ -7,22 +7,20 @@
 
 Dieses Tool hilft Eltern, Schulwebseiten automatisch nach Keywords (MINT, Ganztag, Montessori, etc.) zu durchsuchen und die pädagogischen Konzepte mit KI zusammenzufassen.
 
-Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen Namen, das <a href="https://github.com/babydr4gon/school_miner/tree/main">hier</a> zu finden ist. 
+Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen Namen, das <a href="https://github.com/babydr4gon/school_miner_browser/tree/main">hier</a> zu finden ist. 
 
 <h1>Installation</h1>
 
-Für die automatisierte Installation auf Windows gibt es eine .exe-Datei. Wer das nutzt, kann die ersten beiden Punkte der folgenden Liste (Repositoriy klonen und Abhängigkeiten installieren) überspringen und gleich mit den API-Keys weitermachen.
-
-Wer das Skript lieber manuell installieren möchte, muss zunächst das...
-
-**Repository klonen** oder als ZIP herunterladen und entpacken und anschließend die
+**Repository klonen** oder als ZIP herunterladen und entpacken.
 
 **Abhängigkeiten installieren:**
+
+Dazu einen Terminal / eine Eingabeaufforderung öffnen und 
    
    ```bash
    pip install -r requirements.txt
    ```
-Falls es dabei Fehlermeldungen gibt, dass die Installation zwar erfolgreich aber "not on PATH" war, muss gegebenenfalls noch eine Windows-Einstellung verändert werden. Wie das geht, steht <a href="https://www.geeksforgeeks.org/python/how-to-add-python-to-windows-path/">hier</a>. 
+eingeben. Falls es dabei unter Windows Fehlermeldungen gibt, dass die Installation zwar erfolgreich aber "not on PATH" war, muss gegebenenfalls noch eine System-Einstellung verändert werden. Wie das geht, steht <a href="https://www.geeksforgeeks.org/python/how-to-add-python-to-windows-path/">hier</a>. 
 
 
 **API-Keys** in einer Datei namens .env im gleichen Ordner hinterlegen. Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen, sondern nur die gefundenen Keywords.
@@ -37,7 +35,7 @@ Falls es dabei Fehlermeldungen gibt, dass die Installation zwar erfolgreich aber
 "COLUMN_ORT_IDX": 2,
 ```
 
-**Starten**
+**Starten:**
    Einen Terminal / eine Eingabeaufforderung starten und in den Ordner wechseln, in dem das Skript liegt, z.B.:
    unter Windows
    ```bash
@@ -67,19 +65,19 @@ Am Ende wird  eine Tabelle mit den Ergebnissen der Suche erstellt. Darin stehen 
 
 <img src="https://github.com/wiemachendiedasnur/school_miner/blob/main/images/Karte.jpg" alt="Landkarte" width="650" height="650"/>
 
-Abschließend kann man sich eine Landkarte erstellen lassen. Auf dieser Landkarte sind die Schulen mit Markern eingezeichnet. Klickt man auf einen der Marker, erscheint eine kurze Übersicht: der Name der Schule, die gefundenen Keywords und gegebenenfalls eine KI-Zusammenfassung. 
+Abschließend kann man sich eine Landkarte erstellen lassen. Auf dieser Landkarte sind die Schulen mit Markern eingezeichnet. Klickt man auf einen der Marker, erscheint eine kurze Übersicht: der Name der Schule, die gefundenen Keywords und die KI-Zusammenfassung. 
 
 <h3>Nach dem Start</h3>
 
-ES erscheint startet der Browser mit einem Übersichtsfenster. Hier kann man neue Schuldaten hochladen, Einstellungen vornehmen und die Landkarte erstellen.
+Es erscheint startet der Browser mit einem Übersichtsfenster. Hier kann man neue Schuldaten hochladen, Einstellungen vornehmen und die Landkarte erstellen.
 
-**Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Pyhton-Module aus der Datei requirments.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (linux).
+**Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Python-Module aus der Datei requirments.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (Linux).
 
 **API Keys:** In der linken Seitenleiste sind die Felder für API Keys (OpenAI, Gemini, etc.). Diese müssen dort eingetragen werden.
 
 **Sensibilität:** Mit der Sensibilität stellt man ein, wie streng das Skript bei der Kontrolle der gefundenen Webseiten sein soll. Im Modus "Normal" wird nur geschaut, ob Name und Ort der Schule auf der gefundenen Webseite stehen. Das kann in Einzelfällen dazu führen, dass eine völlig falsche Webseite als Grundlage für die Suche genommen wird, nur weil dort zufällig Name und Ort der Schule genannt werden (Stayfriends, Wikipedia, etc.). 
 
-Im Modus "strict" werden weitere Bedingungen genannt, die erfüllt sein müssen, damit eine Webseite als offizielle Webseite der Schule erkannt und von der KI ausgewertet wird. 
+Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als offizielle Webseite der Schule angenommen und gegebenenfalls von der KI ausgewertet wird. 
 
 <img src="https://github.com/wiemachendiedasnur/school_miner/blob/main/images/Browser.jpg" alt="Hauptmenü" width="650" height="650"/>
 
@@ -94,8 +92,10 @@ Im Modus "strict" werden weitere Bedingungen genannt, die erfüllt sein müssen,
 **Karte:** Der Tab "Karte" generiert eine HTML-Datei mit der Landkarte.
 
 <h1>Zu guter Letzt: </h1>
-Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-)
+Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-). Ich freue mnich darüber.
 
 <p align="center">
   <a href="https://www.buymeacoffee.com/gernotzumc2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 90px !important;width: 324px !important;"></a>
  </p>
+
+##########
