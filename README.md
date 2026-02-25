@@ -26,7 +26,9 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 "COLUMN_ORT_IDX": 2,
 ```
 
-**Start:** Doppelklick auf school_miner_browser.bat.
+**Start:** Auf Windows-Rechnern, Doppelklick auf die heruntergeladene Datei "school_miner_cli.bat". 
+
+Auf Linux-Rechnern, im Terminal eingeben:
 
 Hinweis: Beim ersten Start öffnet sich ein schwarzes Fenster, das alle Bibliotheken lädt. Das kann 1–2 Minuten dauern. Danach ploppt automatisch dein Browser mit dem Dashboard auf.
 
