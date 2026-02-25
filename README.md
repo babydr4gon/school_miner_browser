@@ -9,7 +9,28 @@ Dieses Tool hilft Eltern, Schulwebseiten automatisch nach Keywords (MINT, Ganzta
 
 Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen Namen, das <a href="https://github.com/babydr4gon/school_miner_browser/tree/main">hier</a> zu finden ist. 
 
-<h1>Installation</h1>
+<h1>Automatische Installation</h1>
+
+**Vorbereitung:** Auf dem Rechner muss Python und der Browser Google Chrome bzw Chromium installiert sein. Wer Python auf einem Windows-Rechner nachinstalliert, muss darauf achten, dass der  Haken bei "Add Python to PATH" gesetzt ist.
+
+**Repository klonen** oder als ZIP herunterladen und entpacken.
+
+**API Key:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen.  Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen, sondern nur die gefundenen Keywords.
+   ```bash
+   OPENROUTER_API_KEY=dein_schluessel_hier
+   ```
+**Schulliste anlegen:** Eine Liste mit Schulnamen und Adressen herunterladen und unter "schulen.xlsx" abspeichern. Das Skript erwartet, dass sich der Name der Schue in der Spalte A und der Ort in Spalte C befinden. Wer das ändern möchte, muss im Code folgende Angaben anpassen (0 ist A und 2 ist C): 
+
+```bash
+"COLUMN_NAME_IDX": 0,
+"COLUMN_ORT_IDX": 2,
+```
+
+**Start:** Doppelklick auf school_miner_browser.bat.
+
+Hinweis: Beim ersten Start öffnet sich ein schwarzes Fenster, das alle Bibliotheken lädt. Das kann 1–2 Minuten dauern. Danach ploppt automatisch dein Browser mit dem Dashboard auf.
+
+<h1>Manuelle Installation</h1>
 
 **Repository klonen** oder als ZIP herunterladen und entpacken.
 
@@ -28,7 +49,7 @@ eingeben. Falls es dabei unter Windows Fehlermeldungen gibt, dass die Installati
    OPENROUTER_API_KEY=dein_schluessel_hier
    ```
 
-**Schulliste anlegen:** Eine Liste mit Schulnamen und Adressen herunterladen und unter "schulen.xlsx" abspeichern. Das Skript erwartet, dass sich der Name der Schue in der Spalte A und der Ort in Spalte C befinden. Wer das ändern möchte, muss im Code folgende Angaben anpassen:
+**Schulliste anlegen:** Eine Liste mit Schulnamen und Adressen herunterladen und unter "schulen.xlsx" abspeichern. Das Skript erwartet, dass sich der Name der Schue in der Spalte A und der Ort in Spalte C befinden. Wer das ändern möchte, muss im Code folgende Angaben anpassen (0 ist A und 2 ist C):
 
 ```bash
 "COLUMN_NAME_IDX": 0,
@@ -49,6 +70,10 @@ eingeben. Falls es dabei unter Windows Fehlermeldungen gibt, dass die Installati
 
    ```bash
    streamlit run app.py
+   ```
+  oder, falls das nicht funktioniert:
+  ```bash
+  python -m streamlit run app.py
    ```
    
 <h1>Nutzung</h1>
