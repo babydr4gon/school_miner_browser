@@ -15,7 +15,7 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 
 **Repository klonen** oder als ZIP herunterladen und entpacken.
 
-**API Key:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen.  Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen, sondern nur die gefundenen Keywords.
+**API Keys:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen.  Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen, sondern nur die gefundenen Keywords.
    ```bash
    OPENROUTER_API_KEY=dein_schluessel_hier
    ```
@@ -46,7 +46,7 @@ Dazu einen Terminal / eine Eingabeaufforderung öffnen und
 eingeben. Falls es dabei unter Windows Fehlermeldungen gibt, dass die Installation zwar erfolgreich aber "not on PATH" war, muss gegebenenfalls noch eine System-Einstellung verändert werden. Wie das geht, steht <a href="https://www.geeksforgeeks.org/python/how-to-add-python-to-windows-path/">hier</a>. 
 
 
-**API-Keys** in einer Datei namens .env im gleichen Ordner hinterlegen. Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen, sondern nur die gefundenen Keywords.
+**API-Keys:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen. Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen, sondern nur die gefundenen Keywords.
    ```bash
    OPENROUTER_API_KEY=dein_schluessel_hier
    ```
