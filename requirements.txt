@@ -7,7 +7,7 @@ duckduckgo-search
 folium
 geopy
 openai
-google-generativeai
+google-genai
 branca
 geopy
 streamlit
