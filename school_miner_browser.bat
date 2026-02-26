@@ -1,7 +1,6 @@
 @echo off
 title Schul-Scanner Pro (Browser)
 
-REM --- FIX 1: Wechsel in das Verzeichnis, in dem die .bat liegt ---
 cd /d "%~dp0"
 
 echo =========================================
