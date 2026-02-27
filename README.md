@@ -11,7 +11,7 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 
 <h1>Automatische Installation</h1>
 
-**Vorbereitung:** Auf dem Rechner muss Python und der Browser Google Chrome bzw Chromium installiert sein. Wer Python auf einem Windows-Rechner nachinstalliert, muss darauf achten, dass der  Haken bei "Add Python to PATH" gesetzt ist.
+**Vorbereitung und Systemvoraussetzungen:** Auf dem Rechner muss Python installiert sein, mindestens in der Version 3.11. Wer Python auf einem Windows-Rechner nachinstalliert, muss darauf achten, dass der  Haken bei "Add Python to PATH" gesetzt ist.
 
 **Repository klonen** oder als ZIP herunterladen und entpacken.
 
@@ -26,11 +26,14 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 "COLUMN_ORT_IDX": 2,
 ```
 
-**Start:** Auf Windows-Rechnern, Doppelklick auf die heruntergeladene Datei "school_miner_cli.bat". 
+**Start:** Auf Windows-Rechnern, Doppelklick auf die heruntergeladene Datei "school_miner_browser.bat". 
 
-Auf Linux-Rechnern, im Terminal eingeben:
+Auf Linux-Rechnern, in den Projektordner wechseln und im Terminal eingeben:
+ ```bash
+ streamlit run app.py
+   ```
 
-Hinweis: Beim ersten Start öffnet sich ein schwarzes Fenster, das alle Bibliotheken lädt. Das kann 1–2 Minuten dauern. Danach ploppt automatisch dein Browser mit dem Dashboard auf.
+Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt automatisch der Browser mit dem Dashboard auf.
 
 <h1>Manuelle Installation</h1>
 
@@ -98,7 +101,7 @@ Abschließend kann man sich eine Landkarte erstellen lassen. Auf dieser Landkart
 
 Es erscheint startet der Browser mit einem Übersichtsfenster. Hier kann man neue Schuldaten hochladen, Einstellungen vornehmen und die Landkarte erstellen.
 
-**Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Python-Module aus der Datei requirments.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (Linux).
+**Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Python-Module aus der Datei requirements.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (Linux).
 
 **API Keys:** In der linken Seitenleiste sind die Felder für API Keys (OpenAI, Gemini, etc.). Diese müssen dort eingetragen werden.
 
@@ -118,11 +121,12 @@ Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als of
 
 **Karte:** Der Tab "Karte" generiert eine HTML-Datei mit der Landkarte.
 
-<h1>Zu guter Letzt: </h1>
+**Programm beenden:** Ein Klick beendet den Server und das Browserfenster kann geschlossen werden.
+
+<h1>Kauf mir einen Kaffee! </h1>
 Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-). Ich freue mnich darüber.
 
 <p align="center">
   <a href="https://www.buymeacoffee.com/gernotzumc2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 90px !important;width: 324px !important;"></a>
  </p>
 
-##########
