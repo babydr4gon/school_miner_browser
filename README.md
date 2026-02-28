@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://github.com/wiemachendiedasnur/school_miner/blob/main/images/dragon_mine.png" alt="School_miner icon" width="400" height="400"/>
+  <img src="https://github.com/babydr4gon/school_miner/blob/main/images/dragon_mine.png" alt="School_miner icon" width="400" height="400"/>
   <br>
   School_Miner
 </h1>
@@ -26,11 +26,11 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 "COLUMN_ORT_IDX": 2,
 ```
 
-**Start:** Auf Windows-Rechnern, Doppelklick auf die heruntergeladene Datei "school_miner_browser.bat". 
+**Start:** Auf Windows-Rechnern, die Datei "school_miner_browser.bat" starten. 
 
-Auf Linux-Rechnern, in den Projektordner wechseln und im Terminal eingeben:
+Auf Linux-Rechnern, die Datei school_miner_startbrowser.sh starten. Möglicherweise vorher ausführbar machen mit
  ```bash
- streamlit run app.py
+ chmod +x
    ```
 
 Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt automatisch der Browser mit dem Dashboard auf.
