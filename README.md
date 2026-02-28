@@ -29,9 +29,6 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 **Start:** Auf Windows-Rechnern, die Datei "school_miner_browser.bat" starten. 
 
 Auf Linux-Rechnern, die Datei school_miner_startbrowser.sh starten. Möglicherweise vorher ausführbar machen mit
- ```bash
- chmod +x
-   ```
 
 Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt automatisch der Browser mit dem Dashboard auf.
 
