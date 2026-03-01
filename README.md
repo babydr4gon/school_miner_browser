@@ -11,7 +11,7 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 
 <h1>Automatische Installation</h1>
 
-**Vorbereitung und Systemvoraussetzungen:** Auf dem Rechner muss Python installiert sein, mindestens in der Version 3.11. Wer Python auf einem Windows-Rechner nachinstalliert, muss darauf achten, dass der  Haken bei "Add Python to PATH" gesetzt ist.
+**Vorbereitung und Systemvoraussetzungen:** Auf dem Rechner muss Python installiert sein, mindestens in der Version 3.11. Wer Python auf einem Windows-Rechner nachinstalliert, muss darauf achten, dass der  Haken bei "Add Python to PATH" gesetzt ist. Außerdem erwartet das Programm den Browser Google Chrome oder Chromium.
 
 **Repository klonen** oder als ZIP herunterladen und entpacken.
 
@@ -26,11 +26,11 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 "COLUMN_ORT_IDX": 2,
 ```
 
-**Start:** Auf Windows-Rechnern, die Datei "school_miner_browser.bat" starten. 
+**Start:** Auf Windows-Rechnern die Datei "school_miner_browser.bat" starten. 
 
-Auf Linux-Rechnern, die Datei school_miner_startbrowser.sh starten. Möglicherweise vorher ausführbar machen mit
+Auf Linux-Rechnern die Datei school_miner_startbrowser.sh starten. Gegebenenfalls die Datei vorher ausführbar machen.
 
-Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt automatisch der Browser mit dem Dashboard auf.
+Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt automatisch der Browser mit dem Dashboard auf. Falls der Browser sich nicht automatisch öffnet, muss man die angegebene Netzwerkadresse (127.0.0.. etc.) manuell in einen Browser kopieren.
 
 <h1>Manuelle Installation</h1>
 
@@ -96,13 +96,15 @@ Abschließend kann man sich eine Landkarte erstellen lassen. Auf dieser Landkart
 
 <h3>Nach dem Start</h3>
 
-Es erscheint startet der Browser mit einem Übersichtsfenster. Hier kann man neue Schuldaten hochladen, Einstellungen vornehmen und die Landkarte erstellen.
+Es öffnet sich der Browser mit einem Übersichtsfenster. Hier kann man neue Schuldaten hochladen, Einstellungen vornehmen und die Landkarte erstellen.
+
+Bei manchen Systemvarianten kann es sein, dass sich der Browser nicht automatisch öffnet. Dann muss man manuell einen Browser öffnen und die angegebene Netzwerkadresse (127.0.0.. etc. ) reinkopieren.
 
 **Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Python-Module aus der Datei requirements.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (Linux).
 
 **API Keys:** In der linken Seitenleiste sind die Felder für API Keys (OpenAI, Gemini, etc.). Diese müssen dort eingetragen werden.
 
-**Sensibilität:** Mit der Sensibilität stellt man ein, wie streng das Skript bei der Kontrolle der gefundenen Webseiten sein soll. Im Modus "Normal" wird nur geschaut, ob Name und Ort der Schule auf der gefundenen Webseite stehen. Das kann in Einzelfällen dazu führen, dass eine völlig falsche Webseite als Grundlage für die Suche genommen wird, nur weil dort zufällig Name und Ort der Schule genannt werden (Stayfriends, Wikipedia, etc.). 
+**Sensibilität:** Mit der Sensibilität stellt man ein, wie streng das Skript bei der Kontrolle der gefundenen Webseiten sein soll. Im Modus "Normal" wird nur geschaut, ob Name und Ort der Schule auf der gefundenen Webseite stehen. Das kann in Einzelfällen dazu führen, dass eine völlig falsche Webseite als Grundlage für die Suche genommen wird, nur weil dort zufällig Name und Ort der Schule genannt werden (Stayfriends, Suchmaschinenlinks, etc.). 
 
 Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als offizielle Webseite der Schule angenommen und gegebenenfalls von der KI ausgewertet wird. 
 
@@ -114,7 +116,7 @@ Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als of
 
 **Datei laden:** Im Tab "Daten & Upload" kann man eine bestehende Quelldatei "schulen.xlsx" hochladen. Falls es schon eine Ergebnisliste "schulen_ergebnisse.xlsx" gibt, wird diese automatisch geladen.
 
-**Scannen:** Mit einem Klick auf den Tab "Auto-Scan" und anschließend auf "Scan starten" beginnt das Skript mit der Arbeit. Man kann live mitverfolgen, welche Schule gerade bearbeitet wird. Der Browser läuft im Hintergrund (Headless), stört also nicht. Alternativ gibt es auch hier die Mögichkeit, eine bereits vorhandenen Ergebnisliste Manuel nachzubearbeiten.
+**Scannen:** Mit einem Klick auf den Tab "Auto-Scan" und anschließend auf "Scan starten" beginnt das Skript mit der Arbeit. Man kann live mitverfolgen, welche Schule gerade bearbeitet wird. Der Browser läuft im Hintergrund (Headless), stört also nicht. Alternativ gibt es auch hier die Mögichkeit, eine bereits vorhandenen Ergebnisliste Zeile für Zeile nachzubearbeiten.
 
 **Karte:** Der Tab "Karte" generiert eine HTML-Datei mit der Landkarte.
 
