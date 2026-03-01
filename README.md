@@ -94,13 +94,15 @@ Am Ende wird  eine Tabelle mit den Ergebnissen der Suche erstellt. Darin stehen 
 
 Abschließend kann man sich eine Landkarte erstellen lassen. Auf dieser Landkarte sind die Schulen mit Markern eingezeichnet. Klickt man auf einen der Marker, erscheint eine kurze Übersicht: der Name der Schule, die gefundenen Keywords und die KI-Zusammenfassung. 
 
-<h3>Nach dem Start</h3>
+<h3>Liste laden, Suchen und Karte erstellen</h3>
 
-Es öffnet sich der Browser mit einem Übersichtsfenster. Hier kann man neue Schuldaten hochladen, Einstellungen vornehmen und die Landkarte erstellen.
+Nach dem Start öffnet sich der Browser mit einem Übersichtsfenster. Hier kann man neue Schuldaten hochladen, Einstellungen vornehmen und die Landkarte erstellen.
 
 Bei manchen Systemvarianten kann es sein, dass sich der Browser nicht automatisch öffnet. Dann muss man manuell einen Browser öffnen und die angegebene Netzwerkadresse (127.0.0.. etc. ) reinkopieren.
 
 **Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Python-Module aus der Datei requirements.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (Linux).
+
+<img src="https://github.com/wiemachendiedasnur/school_miner/blob/main/images/StartBrowser.jpg" alt="Hauptmenü" width="650" height="650"/>
 
 **API Keys:** In der linken Seitenleiste sind die Felder für API Keys (OpenAI, Gemini, etc.). Diese müssen dort eingetragen werden.
 
@@ -108,9 +110,9 @@ Bei manchen Systemvarianten kann es sein, dass sich der Browser nicht automatisc
 
 Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als offizielle Webseite der Schule angenommen und gegebenenfalls von der KI ausgewertet wird. 
 
-<img src="https://github.com/wiemachendiedasnur/school_miner/blob/main/images/Browser.jpg" alt="Hauptmenü" width="650" height="650"/>
-
 **Keywords & Typen:** Hier lassen sich bestimme Schlüsselwörter festlegen, nach denen die Webseiten durchsucht werden. Einige sind schon voreingestellt, jede Änderung an dieser Stelle wird aber übernommen. Gespeichert werden die Eintstellungen in einer Daei config.json, die automatisch angelegt wird.
+
+<img src="https://github.com/wiemachendiedasnur/school_miner/blob/main/images/Browser.jpg" alt="Hauptmenü" width="650" height="650"/>
 
 **KI-Prompt:** Hier lässt sich der Prompt festlegen, der zum Beispiel für die Beschreibung des pädagogischen Konzepts der jeweiligen Schule genutzt werden kann. Auch hier ist gibt es eine sehr einfache Vorgabe und jede Änderung an der Stelle wird in der config.json-Datei gespeichert und übenommen.
 
