@@ -102,7 +102,7 @@ Bei manchen Systemvarianten kann es sein, dass sich der Browser nicht automatisc
 
 **Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Python-Module aus der Datei requirements.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (Linux).
 
-<img src="https://github.com/babydr4gon/school_miner/blob/main/images/StartBrowser.jpg" alt="Hauptmenü" width="650" height="650"/>
+<img src="https://github.com/babydr4gon/school_miner_browser/blob/main/images/StartBrowser.jpg" alt="Hauptmenü" width="650" height="650"/>
 
 **API Keys:** In der linken Seitenleiste sind die Felder für API Keys (OpenAI, Gemini, etc.). Diese müssen dort eingetragen werden.
 
