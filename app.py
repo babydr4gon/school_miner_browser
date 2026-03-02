@@ -5,9 +5,12 @@ import os
 import time
 import re
 import random
-import shutil
-from urllib.parse import urlparse
+import sys
+from urllib.parse import urljoin, urlparse
 from dotenv import load_dotenv
+import shutil 
+import webbrowser
+import sys
 import signal
 
 # Externe APIs & Tools
@@ -29,7 +32,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 # --- CONFIG & CONSTANTS ---
 CONFIG_FILE = "config.json"
 DEFAULT_SCHULTYPEN = ["Grundschule", "Hauptschule", "Realschule", "Gymnasium", "Gesamtschule", "Förderschule", "Berufsschule", "Verbundschule", "Mittelstufenschule", "Oberstufengymnasium"]
-DEFAULT_HARD_KEYWORDS = ["MINT", "Sport", "Musik", "Gesellschaftswissenschaften", "Sprachen", "bilingual", "themenorientiert", "Makerspace", "Charakter", "Montessori", "Walldorf", "jahrgangsübergreifend", "altersübergreifend", "Ganztag"]
+DEFAULT_HARD_KEYWORDS = ["MINT", "Sport", "Musik", "Gesellschaftswissenschaften", "Sprachen", "bilingual", "themenorientiert", "Charakter", "Montessori", "Walldorf", "jahrgangsübergreifend", "altersübergreifend", "Ganztag"]
 PRIORITY_LINKS_L1 = ["Schulprofil", "Schulprogramm", "Leitbild", "Über uns", "Unsere Schule", "Wir über uns"]
 PRIORITY_LINKS_L2 = ["Leitbild", "Konzept", "Pädagogik", "Schwerpunkte", "Ganztag", "Angebote", "AGs", "Förderung"]
 filename = "Karte.html"
@@ -38,36 +41,56 @@ st.set_page_config(page_title="school_miner ", page_icon="🏫", layout="wide")
 
 # --- HELPER FUNCTIONS  ---
 
-@st.cache_data
+
+DEFAULT_CONFIG = {
+    "INPUT_FILE": "schulen.xlsx",
+    "OUTPUT_FILE": "schulen_ergebnisse.xlsx",
+    "MAP_FILE": "schulen_karte.html",
+    "COLUMN_NAME_IDX": 0,
+    "COLUMN_ORT_IDX": 2,
+    "GEMINI_MODEL": "gemini-2.0-flash-exp", 
+    "OPENROUTER_MODEL": "meta-llama/llama-3.3-70b-instruct", 
+    "GROQ_MODEL": "llama-3.3-70b-versatile",
+    "WAIT_TIME": 2.0, 
+    "SENSITIVITY": "normal", 
+    "SCHULTYPEN_LISTE": DEFAULT_SCHULTYPEN,
+    "KEYWORD_LISTE": DEFAULT_HARD_KEYWORDS,
+    "AI_PRIORITY": ["openai", "gemini", "groq", "openrouter"],
+    "MANUAL_RESUME_IDX": 0,
+    "PROMPT_TEMPLATE": (
+        "Du bist ein Schul-Analyst. Ich gebe dir Textauszüge von der Webseite.\n"
+        "Fasse das pädagogische Konzept zusammen.\n"
+        "Ignoriere Navigationstext.\n"
+        "Maximal 3 Sätze.\n\n"
+        "Text:\n{text}"
+    ),
+    
+    "ERROR_MARKERS": ["Nicht gefunden", "Keine Daten", "KI-Fehler", "QUOTA", "Error", "Zu wenige Infos", "Strict Filter", "Nicht erreichbar"]
+}
+
 def load_config():
-    cfg = {
-        "INPUT_FILE": "schulen.xlsx",
-        "OUTPUT_FILE": "schulen_ergebnisse.xlsx",
-        "GEMINI_MODEL": "gemini-2.0-flash-exp", 
-        "OPENROUTER_MODEL": "meta-llama/llama-3.3-70b-instruct", 
-        "GROQ_MODEL": "llama-3.3-70b-versatile",
-        "SENSITIVITY": "normal", 
-        "SCHULTYPEN_LISTE": DEFAULT_SCHULTYPEN,
-        "KEYWORD_LISTE": DEFAULT_HARD_KEYWORDS,
-        "AI_PRIORITY": ["openai", "gemini", "groq", "openrouter"],
-        "PROMPT_TEMPLATE": (
-            "Du bist ein Schul-Analyst. Ich gebe dir Textauszüge von der Webseite.\n"
-            "Fasse das pädagogische Konzept zusammen.\n"
-            "Ignoriere Navigationstext.\n"
-            "Maximal 3 Sätze.\n\n"
-            "Text:\n{text}"
-        ),
-        "ERROR_MARKERS": ["Nicht gefunden", "Keine Daten", "KI-Fehler", "QUOTA", "Error", "Zu wenige Infos", "Strict Filter", "Nicht erreichbar"]
-    }
+    """Lädt die Konfiguration oder erstellt sie mit Defaults, falls sie fehlt."""
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                loaded = json.load(f)
-                for k, v in loaded.items(): cfg[k] = v
-        except: pass
-    return cfg
+                return json.load(f)
+        except Exception as e:
+            st.error(f"Fehler beim Lesen der config.json: {e}")
     
-    
+    # Falls Datei nicht existiert oder kaputt ist: Defaults speichern und zurückgeben
+    save_config(DEFAULT_CONFIG)
+    return DEFAULT_CONFIG.copy()
+
+def save_config(cfg):
+    """Schreibt die Konfiguration physisch auf die Festplatte."""
+    try:
+        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cfg, f, indent=4, ensure_ascii=False)
+        return True
+    except Exception as e:
+        st.error(f"❌ Fehler beim Speichern der Config: {e}")
+        return False
+            
 # Pfad zur .env Datei explizit ermitteln (funktioniert auf Linux & Windows)
 basedir = os.path.abspath(os.path.dirname(__file__))
 env_path = os.path.join(basedir, '.env')
@@ -91,12 +114,6 @@ elif gemini_key:
     # Nur die ersten 4 Zeichen zeigen, um zu sehen ob er da ist
     st.sidebar.success(f"✅ Gemini Key geladen (Starts with: {gemini_key[:4]}...)")
     
-def save_config_to_file(cfg):
-    try:
-        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-            json.dump(cfg, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        st.error(f"Fehler beim Speichern der Config: {e}")
 
 # --- API CLIENT SETUP ---
 def get_ai_client(provider, api_key):
@@ -406,7 +423,7 @@ def generate_folium_map(data):
             <hr>
             <p><b>KW:</b> {kw}</p>
             <div style="max-height:100px;overflow-y:auto;background:#f9f9f9;padding:5px;font-size:11px;border:1px solid #eee;">{ki}</div>
-            <br><a href="{entry.get('webseite','#')}" target="_blank">Webseite</a>
+            <br><a href=cfg"{entry.get('webseite','#')}" target="_blank">Webseite</a>
         </div>
         """
         folium.Marker([lat, lon], popup=folium.Popup(html, max_width=350), icon=folium.Icon(color=color, icon="info-sign" if not is_approx else "question-sign")).add_to(m)
@@ -426,6 +443,11 @@ def generate_folium_map(data):
 
 def main():
     st.sidebar.title("🏫 Schul-Scanner Pro")
+    
+    if 'config' not in st.session_state:
+        st.session_state.config = load_config()
+
+    config = st.session_state.config
     
     # Systemcheck ---
     with st.sidebar.expander("🛠️ System-Status", expanded=True):
@@ -452,12 +474,7 @@ def main():
             "openrouter": st.text_input("OpenRouter Key", value=os.getenv("OPENROUTER_API_KEY", ""), type="password"),
         }
     
-    # Load Config
-    if 'config' not in st.session_state:
-        st.session_state.config = load_config()
-    
-    config = st.session_state.config
-    
+     
     # Sensitivity
     config["SENSITIVITY"] = st.sidebar.selectbox("Sensibilität", ["normal", "strict"], index=0 if config["SENSITIVITY"]=="normal" else 1, help="'strict' prüft auf 'Wir sind eine Schule' Sätze.")
     
@@ -474,7 +491,17 @@ def main():
         prompt_txt = st.text_area("Template", config["PROMPT_TEMPLATE"], height=150)
         config["PROMPT_TEMPLATE"] = prompt_txt
 
-# --- SHUTDOWN LOGIK ---
+#  ---Einstellungen Speichern---
+    st.sidebar.markdown("---")
+    if st.sidebar.button("🚀 Einstellungen speichern"):
+        # WICHTIG: Nicht das Ergebnis der Funktion zuweisen!
+        success = save_config(st.session_state.config) 
+        if success:
+            st.sidebar.success("💾 config.json aktualisiert!")
+            time.sleep(0.5)
+            st.rerun() # App neu laden, um Änderungen zu festigen
+
+# --- Shutdown ---
     st.sidebar.markdown("---")
     if st.sidebar.button("🚀 Programm beenden"):
         st.sidebar.info("Schließe Server... Du kannst diesen Tab jetzt schließen.")
