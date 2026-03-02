@@ -8,6 +8,7 @@ import random
 import shutil
 from urllib.parse import urlparse
 from dotenv import load_dotenv
+import signal
 
 # Externe APIs & Tools
 from google import genai
@@ -65,7 +66,31 @@ def load_config():
                 for k, v in loaded.items(): cfg[k] = v
         except: pass
     return cfg
+    
+    
+# Pfad zur .env Datei explizit ermitteln (funktioniert auf Linux & Windows)
+basedir = os.path.abspath(os.path.dirname(__file__))
+env_path = os.path.join(basedir, '.env')
 
+# .env laden und prüfen ob es geklappt hat
+if os.path.exists(env_path):
+    load_dotenv(env_path)
+    # Debug-Info (nur für dich zum Testen, kannst du später löschen)
+    # st.write(f"DEBUG: .env gefunden in {env_path}")
+else:
+    st.error(f"⚠️ Datei '.env' wurde nicht gefunden unter: {env_path}")
+
+# Keys auslesen
+gemini_key = os.getenv("GOOGLE_API_KEY")
+openai_key = os.getenv("OPENAI_API_KEY")
+
+# Kurzer Check im UI
+if not gemini_key and not openai_key:
+    st.warning("🔑 Keys wurden geladen, sind aber leer. Bitte prüfe die .env Datei.")
+elif gemini_key:
+    # Nur die ersten 4 Zeichen zeigen, um zu sehen ob er da ist
+    st.sidebar.success(f"✅ Gemini Key geladen (Starts with: {gemini_key[:4]}...)")
+    
 def save_config_to_file(cfg):
     try:
         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
@@ -448,6 +473,15 @@ def main():
     with st.sidebar.expander("🤖 KI Prompt"):
         prompt_txt = st.text_area("Template", config["PROMPT_TEMPLATE"], height=150)
         config["PROMPT_TEMPLATE"] = prompt_txt
+
+# --- SHUTDOWN LOGIK ---
+    st.sidebar.markdown("---")
+    if st.sidebar.button("🚀 Programm beenden"):
+        st.sidebar.info("Schließe Server... Du kannst diesen Tab jetzt schließen.")
+       # Kurze Verzögerung, damit die Meldung noch angezeigt wird
+        time.sleep(1)
+       # Sendet das Signal zum Beenden an den eigenen Prozess
+        os.kill(os.getpid(), signal.SIGTERM)
 
     # 2. MAIN TABS
     tab1, tab2, tab3, tab4 = st.tabs(["📂 Daten & Upload", "🚀 Auto-Scan", "🗺️ Karte", "✏️ Einzeln bearbeiten"])
