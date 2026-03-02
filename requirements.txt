@@ -12,3 +12,4 @@ branca
 geopy
 streamlit
 streamlit-folium
+ddgs
