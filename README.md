@@ -26,12 +26,6 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 "COLUMN_ORT_IDX": 2,
 ```
 
-**Start:** Auf Windows-Rechnern die Datei "school_miner_browser.bat" starten. 
-
-Auf Linux-Rechnern die Datei "school_miner_startbrowser.sh" starten. Gegebenenfalls die Datei vorher ausführbar machen. 
-
-Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt der Browser mit dem Dashboard auf. Falls der Browser sich nicht automatisch öffnet, muss man die angegebene Netzwerkadresse (127.0.0.. etc.) manuell in einen Browser kopieren.
-
 <h1>Manuelle Installation</h1>
 
 **Repository klonen** oder als ZIP herunterladen und entpacken.
@@ -55,26 +49,23 @@ eingeben. Falls es dabei unter Windows Fehlermeldungen gibt, dass die Installati
 "COLUMN_NAME_IDX": 0,
 "COLUMN_ORT_IDX": 2,
 ```
+<h1>Start</h1>
 
-**Starten:**
-   Einen Terminal / eine Eingabeaufforderung starten und in den Ordner wechseln, in dem das Skript liegt, z.B.:
-   unter Windows
-   ```bash
-   cd Ein_Ordner\ein_Unterordner\...
-   ```
-   oder unter Linux
-   ```bash
-   cd Ein_Ordner/ein_Unterordner/ ...
-   ```
-   Dann das Skript starten mit
+Auf Windows-Rechnern Doppelklick auf die Datei "school_miner_browser.bat". 
 
-   ```bash
+Auf Linux-Rechnern die Datei "school_miner_startbrowser.sh" starten. Gegebenenfalls die Datei vorher ausführbar machen. 
+
+Alternativ einen Terminal / eine Eingabeaufforderung öffnen und in den Ordner wechseln, in dem das Skript liegt. Starten mit
+
+ ```bash
    streamlit run app.py
    ```
   oder, falls das nicht funktioniert:
   ```bash
   python -m streamlit run app.py
    ```
+
+Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt der Browser mit dem Dashboard auf. Falls der Browser sich nicht automatisch öffnet, muss man die angegebene Netzwerkadresse (127.0.0.. etc.) manuell in einen Browser kopieren.
    
 <h1>Nutzung</h1>
 
