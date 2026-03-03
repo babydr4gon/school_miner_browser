@@ -105,9 +105,13 @@ Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als of
 
 **KI-Prompt:** Hier lässt sich der Prompt festlegen, der zum Beispiel für die Beschreibung des pädagogischen Konzepts der jeweiligen Schule genutzt werden kann. Auch hier ist gibt es eine sehr einfache Vorgabe und jede Änderung an der Stelle wird in der config.json-Datei gespeichert und übenommen.
 
+**Einstellungen speichern:** Übernimmt die aktuellen Änderungen bei KI-Prompt, Keywords, Sensibilität etc. in die config.json.
+
 **Datei laden:** Im Tab "Daten & Upload" kann man eine bestehende Quelldatei "schulen.xlsx" hochladen. Falls es schon eine Ergebnisliste "schulen_ergebnisse.xlsx" gibt, wird diese automatisch geladen.
 
-**Scannen:** Mit einem Klick auf den Tab "Auto-Scan" und anschließend auf "Scan starten" beginnt das Skript mit der Arbeit. Man kann live mitverfolgen, welche Schule gerade bearbeitet wird. Der Browser läuft im Hintergrund (Headless), stört also nicht. Alternativ gibt es auch hier die Mögichkeit, eine bereits vorhandenen Ergebnisliste Zeile für Zeile nachzubearbeiten.
+**Scannen:** Mit einem Klick auf den Tab "Auto-Scan" und anschließend auf "Scan starten" beginnt das Skript mit der Arbeit. Man kann live mitverfolgen, welche Schule gerade bearbeitet wird. Der Browser läuft im Hintergrund (Headless), stört also nicht. 
+
+**Einzeln bearbeiten:** Nach dem ersten Durchlauf des Skripts werden einige Einträge unvollständig sein. Hier kann man die Ergebnisse für jede Schule nachbearbeiten. Oben steht der Schulname in einem Dropdown-Menü. Bei einem Klick auf "Aktuelle URL aufrufen" wird die derzeit gespeicherte Webseite in einem neuen Tab geöffnet. Bei einem Klick auf "URL testen / Deep Scan" wird die aktuell gespeicherte URL neu vom Skript auf Keywords etc. durchsucht. Alle Änderungen kann man mit einem Klick auf den Button "Änderungen speichern und in Ergebnisliste übernehmen" in der Datei "schulen_ergebnisse.xlsx" speichern.
 
 **Karte:** Der Tab "Karte" generiert eine HTML-Datei mit der Landkarte.
 
