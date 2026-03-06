@@ -1,5 +1,5 @@
 @echo off
-title Schul-Scanner Pro (Browser)
+title school_miner (Browser)
 cd /d "%~dp0"
 
 echo =========================================
@@ -44,8 +44,7 @@ echo enableCORS = false
 echo enableXsrfProtection = false
 ) > .streamlit\config.toml
 
-echo [3/3] Starte Dashboard...
+echo [2/2] Starte Dashboard...
 echo.
 
 python -m streamlit run app.py
-
