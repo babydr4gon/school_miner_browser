@@ -117,6 +117,18 @@ Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als of
 
 **Programm beenden:** Ein Klick beendet den Server und das Browserfenster kann geschlossen werden.
 
+<h1>Tipps und Tricks </h1>
+
+Die meisten Schulwebseiten sind...schlecht. Viele dieser Seiten sind entweder veraltet oder ziemlich zusammengestückelt. Deshalb muss man, wenn man erfolgreich Informationen sammeln will, etwas Zeit und Mühe investieren. Dazu folgende Ideen:
+
+**Mit einer kleinen Testliste anfangen:** Es hat sich bewährt, zunächst höchstens 10 Schulen als Quelle zu nehmen und das Programm ein paar Mal mit verschiedenen Keywords und einem individuell gestalteten Prompt durchlaufen zu lassen. Sehr unterschiedlich wirkt es sich beispielsweise aus, die Sensibilität von "strict" auf "normal" zu stellen. Dann tauchen zwar plötzlich vielleicht ein paar Zeitungsberichte in der Suche auf, aber da stehen manchmal auch ganz interessante Sachen über die gesuchte Schule drin. Die Keywordliste zu erweitern kann dafür sorgen, dass das Skript auf Unterseiten der Schulhomepage Dinge findet, die sonst verloren gegangen wären.
+
+**Einen guten Prompt formulieren:** Es lohnt sich sicher, hier etwas Arbeit reinzustecken und mehrere unterschiedliche Versionen zu vergleichen. Es kann helfen, zunächst einen sehr allgemeinen Prompt zu formulieren, bei dem vielleicht einfach nur nach Besonderheiten der Schule gefragt wird. Im zweiten Schritt probiert man dann einen Prompt, der sehr genau auf den eigenen Fokus bei der Schulsuche hin geschrieben ist. Stück für Stück nähert man sich so einem Prompt an, der individuell auf den eigenen Bedarf zugeschnitten, aber gleichzeitig auch für größere Listen geeignet ist.
+
+**Den Index in der config.json nutzen:** Manchmal hat man Pech und in der Ergebnisliste gibt es einen längeren Abschnitt ohne vernünftige Ergebnisse. Über 20 oder 30 Zeilen lang hat das Programm möglicherweise keine oder keine vernünftigen Daten geliefert. Wenn man nun den Autoscan wieder bei 0 startet, werden andere Ergebnisse überschrieben. In diesem Fall kann man besser ganz unten in der config.json den Wert "AUTO_RESUME_IDX" auf die Zeile stellen, wo man wieder anfangen möchte. Wenn die 20 Zeilen abgearbeitet sind, einfach das Programm mit Strg + C unterbrechen.
+
+**Viele graue Marker auf der Landkarte:** Wahrscheinlich sind viele Schulen noch ohne Schultyp und werden dann den anderen Farben nicht zugeordnet. Da hilft nur eine manuelle Kontrolle oder ein ganz neuer Autoscan.
+
 <h1>Kauf mir einen Kaffee! </h1>
 Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-). Ich freue mnich darüber.
 
