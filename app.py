@@ -12,6 +12,8 @@ import shutil
 import webbrowser
 import sys
 import signal
+import logging
+import traceback
 
 # Externe APIs & Tools
 from google import genai
@@ -39,6 +41,13 @@ filename = "Karte.html"
 
 st.set_page_config(page_title="school_miner ", page_icon="🏫", layout="wide")
 
+# --- LOGGING SETUP ---
+logging.basicConfig(
+    filename='scanner_error.log',
+    level=logging.ERROR,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
 # --- HELPER FUNCTIONS  ---
 
 
@@ -46,6 +55,7 @@ DEFAULT_CONFIG = {
     "INPUT_FILE": "schulen.xlsx",
     "OUTPUT_FILE": "schulen_ergebnisse.xlsx",
     "MAP_FILE": "schulen_karte.html",
+    "MODEL_NAME": "gemini-1.5-flash",  # Standardwert
     "COLUMN_NAME_IDX": 0,
     "COLUMN_ORT_IDX": 2,
     "GEMINI_MODEL": "gemini-2.0-flash-exp", 
@@ -69,17 +79,25 @@ DEFAULT_CONFIG = {
 }
 
 def load_config():
-    """Lädt die Konfiguration oder erstellt sie mit Defaults, falls sie fehlt."""
+    """Lädt die Konfiguration und füllt fehlende Keys mit Defaults auf."""
+    cfg = DEFAULT_CONFIG.copy()
+    
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                loaded = json.load(f)
+                # Werte mergen
+                for k, v in loaded.items():
+                    cfg[k] = v
+            return cfg
         except Exception as e:
             st.error(f"Fehler beim Lesen der config.json: {e}")
-    
-    # Falls Datei nicht existiert oder kaputt ist: Defaults speichern und zurückgeben
-    save_config(DEFAULT_CONFIG)
-    return DEFAULT_CONFIG.copy()
+            
+            return cfg
+            
+    # Nur wenn die Datei gar nicht existiert: neu anlegen
+    save_config(cfg)
+    return cfg
 
 def save_config(cfg):
     """Schreibt die Konfiguration physisch auf die Festplatte."""
@@ -91,15 +109,14 @@ def save_config(cfg):
         st.error(f"❌ Fehler beim Speichern der Config: {e}")
         return False
             
-# Pfad zur .env Datei explizit ermitteln (funktioniert auf Linux & Windows)
+# Pfad zur .env Datei explizit ermitteln 
 basedir = os.path.abspath(os.path.dirname(__file__))
 env_path = os.path.join(basedir, '.env')
 
-# .env laden und prüfen ob es geklappt hat
+# .env laden 
 if os.path.exists(env_path):
     load_dotenv(env_path)
-    # Debug-Info (nur für dich zum Testen, kannst du später löschen)
-    # st.write(f"DEBUG: .env gefunden in {env_path}")
+    
 else:
     st.error(f"⚠️ Datei '.env' wurde nicht gefunden unter: {env_path}")
 
@@ -155,13 +172,109 @@ def check_environment():
         
     return status
     
+def sync_logic(existing_df, config):
+    """Übernimmt EXAKT die funktionierende CLI-Logik für Streamlit."""
+    if not os.path.exists(config["INPUT_FILE"]):
+        st.warning(f"Datei {config['INPUT_FILE']} nicht gefunden.")
+        return existing_df
+    
+    try:
+        # WICHTIG: header=None, genau wie in der CLI!
+        df_raw = pd.read_excel(config["INPUT_FILE"], header=None, engine='openpyxl')
+        
+        # Bestehende Schulen ermitteln (nur nach Name, wie in der CLI)
+        if not existing_df.empty and 'schulname' in existing_df.columns:
+            existing = set(existing_df['schulname'].astype(str).str.strip())
+        else:
+            existing = set()
+        
+        added_count = 0
+        new_rows = []
+        
+        for _, row in df_raw.iterrows():
+            # Prüfen, ob die Zeile lang genug ist 
+            if len(row) <= max(config["COLUMN_NAME_IDX"], config["COLUMN_ORT_IDX"]): 
+                continue
+                
+            n = str(row[config["COLUMN_NAME_IDX"]]).strip()
+            ort = str(row[config["COLUMN_ORT_IDX"]]).strip()
+            
+            # exakte CLI-Bedingung:
+            if len(n) > 4 and "schule" in n.lower() and "=" not in n and n not in existing:
+                new_rows.append({
+                    'schulname': n,
+                    'ort': ort,
+                    'webseite': "Nicht gefunden",
+                    'schultyp': "",
+                    'keywords': "",
+                    'ki_zusammenfassung': "Keine Daten"
+                })
+                existing.add(n)
+                added_count += 1
+        
+        if new_rows:
+            df_new = pd.DataFrame(new_rows)
+            updated_df = pd.concat([existing_df, df_new], ignore_index=True)
+            updated_df = sanitize_dataframe(updated_df)
+            st.toast(f"✅ {added_count} neue Schulen importiert!", icon="📥")
+            return updated_df
+        else:
+            st.info("ℹ️ Keine neuen Einträge gefunden (alle schon vorhanden).")
+            return existing_df
+            
+    except Exception as e:
+        st.error(f"Fehler beim Synchronisieren: {e}")
+        return existing_df
+
+def save_dataframe(df, config):
+    """Zentrale Speicherfunktion mit Backup-Logik für maximale Sicherheit."""
+    output_file = config["OUTPUT_FILE"]
+    try:
+        # 1. Sicherheits-Backup der alten Datei erstellen
+        if os.path.exists(output_file):
+            try:
+                shutil.copy(output_file, output_file + ".bak")
+            except: pass 
+
+        # 2. Daten bereinigen und speichern
+        if 'sanitize_dataframe' in globals():
+            df = sanitize_dataframe(df)
+            
+        df.to_excel(output_file, index=False, engine='openpyxl')
+        return True
+    except Exception as e:
+        st.error(f"❌ Speicherfehler: {e}. Ist die Datei eventuell in Excel geöffnet?")
+        # 3. Restore-Versuch bei Crash
+        if os.path.exists(output_file + ".bak"):
+            st.warning("Versuche Daten aus letztem Backup zu retten...")
+            shutil.copy(output_file + ".bak", output_file)
+        return False
+
+def sanitize_dataframe(df):
+    """Bereinigt Spaltennamen und stellt Pflichtfelder sicher."""
+    # 1. Spaltennamen normalisieren (Kleinschreibung & Leerzeichen weg)
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    
+    # 2. Liste der Pflichtspalten, die die App erwartet
+    required_columns = [
+        'schulname', 'ort', 'webseite', 
+        'schultyp', 'keywords', 'ki_zusammenfassung'
+    ]
+    
+    # 3. Fehlende Spalten leer anlegen, damit kein KeyError mehr kommt
+    for col in required_columns:
+        if col not in df.columns:
+            df[col] = ""
+            
+    return df
+    
 # --- SELENIUM DRIVER ---
 def get_driver():
     """
     Initialisiert den Chrome/Chromium Treiber für Windows und Linux (inkl. Raspberry Pi).
     """
     chrome_options = Options()
-    # Wichtig für Server/Raspberry Pi ohne Monitor
+    
     chrome_options.add_argument("--headless=new") 
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
@@ -178,8 +291,8 @@ def get_driver():
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=chrome_options)
     except Exception as e_auto:
-        # --- STRATEGIE 2: Feste Pfade (Speziell für Linux / Raspberry Pi / Debian) ---
-        # Auf dem Pi wird der Treiber meist über apt installiert (chromium-chromedriver)
+        # --- STRATEGIE 2: Feste Pfade  ---
+        
         paths = [
             "/usr/bin/chromedriver",
             "/usr/lib/chromium-browser/chromedriver",
@@ -197,7 +310,7 @@ def get_driver():
                 # Versuch 3: Einfach hoffen, dass 'chromedriver' in den Systemvariablen (PATH) ist
                 driver = webdriver.Chrome(options=chrome_options)
         except Exception as e_sys:
-            # Wir werfen hier einen Fehler, den wir in Streamlit abfangen können
+            # Fehler, den wir in Streamlit abfangen können
             raise RuntimeError(
                 f"Browser konnte nicht gestartet werden.\n\n"
                 f"Fehler Auto-Mode: {e_auto}\n"
@@ -223,24 +336,71 @@ def search_ddg_robust(query):
         except: time.sleep(1.5)
     return None
 
-def get_selenium_content(driver, url):
+def get_selenium_content(driver, url, wait_time=2.0):
+    """Lädt die Seite, scrollt für Lazy-Loading und extrahiert Text/Links."""
     try:
         driver.get(url)
-        time.sleep(1.5)
+        
+        # 1. Kurz warten für den initialen Load
+        time.sleep(wait_time / 2)
+        
+        # 2. Einmal nach unten scrollen, um Lazy-Loading auszulösen
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        
+        # 3. Restliche Wartezeit absitzen, damit Menüs/Bilder nachladen können
+        time.sleep(wait_time / 2)
+        
         title = driver.title
         body = driver.find_element(By.TAG_NAME, "body").text
         links = []
+        
         for elem in driver.find_elements(By.TAG_NAME, "a"):
-            try: links.append((elem.get_attribute("href"), elem.text.lower()))
-            except: continue
+            try: 
+                href = elem.get_attribute("href")
+                if href:  # Nur gültige Links speichern
+                    links.append((href, elem.text.lower()))
+            except: 
+                continue
+                
         return title, body, links
-    except: return "", "", []
+    except Exception as e: 
+        return "", "", []
 
 def find_school_type_in_text(text, type_list):
+    """
+    Sucht nach Schultypen, nutzt aber einen "Rückspiegel", 
+    um typische False-Positives (z.B. "nach der Grundschule") auszufiltern.
+    """
     found = set()
-    text_lower = text.lower()
+    
+    # Typische Text-Fallen (Regex), die darauf hindeuten, dass eine andere Schule gemeint ist
+    fallen = [
+        r"nach\s+der\s+", 
+        r"von\s+der\s+", 
+        r"übergang\s+(von|aus)\s+(der)?\s*", 
+        r"kooperation\s+mit\s+(der|einer)?\s*",
+        r"schüler(innen)?\s+der\s+",
+        r"abgänger(innen)?\s+der\s+"
+    ]
+    
     for styp in type_list:
-        if styp.lower() in text_lower: found.add(styp)
+        # Finde ALLE Vorkommen dieses Schultyps im Text
+        matches = list(re.finditer(re.escape(styp), text, re.IGNORECASE))
+        
+        for match in matches:
+            # Hole die 35 Zeichen VOR dem gefundenen Schultyp
+            start_idx = max(0, match.start() - 35)
+            context_before = text[start_idx:match.start()].lower()
+            
+            # Prüfe, ob eine der Fallen im Kontext davor auftaucht
+            is_falle = any(re.search(falle, context_before) for falle in fallen)
+            
+            # WICHTIG: Wenn auch nur ein Vorkommen KEINE Falle ist, 
+            # werten wir es als echten Treffer und können aufhören zu suchen!
+            if not is_falle:
+                found.add(styp)
+                break 
+                
     return list(found)
 
 def validate_page_strict(text):
@@ -261,7 +421,9 @@ def crawl_and_analyze(driver, school_input, school_ort, config):
 
     if not url: return "Nicht gefunden", "", "", ""
     
-    title_main, text_main, links_main = get_selenium_content(driver, url)
+    wait_time = config.get("WAIT_TIME", 2.0)
+    title_main, text_main, links_main = get_selenium_content(driver, url, wait_time)
+    
     if not text_main: return "Nicht erreichbar", "", "", ""
     
     if config["SENSITIVITY"] == "strict" and not is_manual_url:
@@ -269,7 +431,9 @@ def crawl_and_analyze(driver, school_input, school_ort, config):
     
     found_types = find_school_type_in_text(title_main + "\n" + text_main, config["SCHULTYPEN_LISTE"])
     found_kws = set()
-    chunks = [f"--- Seite 1 ({title_main}) ---\n{text_main[:2500]}"]
+    
+    # Zeichen-Limit auf 10.000 !
+    chunks = [f"--- Seite 1 ({title_main}) ---\n{text_main[:10000]}"]
     
     def scan(txt):
         for k in config["KEYWORD_LISTE"]:
@@ -281,41 +445,92 @@ def crawl_and_analyze(driver, school_input, school_ort, config):
     l1_targets = []
     
     for href, txt in links_main:
-        if href and domain in urlparse(href).netloc:
+        if not href: continue
+        
+        # absolute Links
+        full_url = urljoin(url, href)
+        
+        if domain in urlparse(full_url).netloc:
             txt_low = txt.lower()
             if any(p.lower() in txt_low for p in PRIORITY_LINKS_L1):
-                l1_targets.append(href)
+                l1_targets.append(full_url)
             elif is_manual_url:
                 blocklist = ["impressum", "datenschutz", "login", "anmelden", "kontakt", "sitemap"]
                 if not any(b in txt_low for b in blocklist) and len(txt) > 2:
-                    l1_targets.append(href)
+                    l1_targets.append(full_url)
 
-    scan_list = list(dict.fromkeys(l1_targets))[:3]
+    scan_list = list(dict.fromkeys(l1_targets))[:5]
     
     for l1 in scan_list:
-        t1, text1, links1 = get_selenium_content(driver, l1)
+        t1, text1, links1 = get_selenium_content(driver, l1, wait_time)
         if text1:
             scan(text1)
-            chunks.append(f"--- {t1} ---\n{text1[:2500]}")
+            chunks.append(f"--- {t1} ---\n{text1[:10000]}") # Auf 10.000 erhöht
             if not found_types: found_types.extend(find_school_type_in_text(text1, config["SCHULTYPEN_LISTE"]))
             
-            if not found_kws and not is_manual_url:
-                 l2_urls = [h for h, t in links1 if h and domain in urlparse(h).netloc and any(p.lower() in t for p in PRIORITY_LINKS_L2)]
-                 for l2 in list(dict.fromkeys(l2_urls))[:2]:
-                    t2, text2, _ = get_selenium_content(driver, l2)
+            if not is_manual_url:
+                 l2_urls = []
+                 for h, t in links1:
+                     if h:
+                         full_h = urljoin(l1, h)
+                         if domain in urlparse(full_h).netloc and any(p.lower() in t for p in PRIORITY_LINKS_L2):
+                             l2_urls.append(full_h)
+                 
+                 for l2 in list(dict.fromkeys(l2_urls))[:3]:
+                    t2, text2, _ = get_selenium_content(driver, l2, wait_time)
                     if text2:
                         scan(text2)
-                        chunks.append(f"--- {t2} ---\n{text2[:2500]}")
+                        chunks.append(f"--- {t2} ---\n{text2[:10000]}") # Auf 10.000 erhöht
                         
     schultyp_final = ", ".join(sorted(list(set(found_types))))
     return url, schultyp_final, ", ".join(sorted(list(found_kws))), "\n\n".join(chunks)
 
+def is_entry_empty(entry, config):
+    """
+    Prüft, ob ein Eintrag bearbeitet werden muss. 
+    Berücksichtigt dabei auch 'nan'-Strings aus Excel/Pandas.
+    """
+    # Bereinigt Werte von NaN und Leerzeichen
+    def clean(val):
+        v = str(val).strip().lower()
+        return "" if v in ["nan", "none", "null", ""] else v
+
+    schultyp = clean(entry.get('schultyp', ""))
+    keywords = clean(entry.get('keywords', ""))
+    ki = clean(entry.get('ki_zusammenfassung', ""))
+    
+    # Ist eines der Felder nach der Bereinigung leer?
+    if not schultyp or not keywords or not ki:
+        return True
+        
+    # Enthält der KI-Text einen Fehler-Marker?
+    markers = [m.lower() for m in config.get("ERROR_MARKERS", [])]
+    if any(m in ki for m in markers):
+        return True
+        
+    return False
+    
+ #### -- KI ---
+
 def ki_analyse(context_text, config, api_keys):
     if not context_text or len(context_text) < 50: return "Keine Daten"
-    prompt = config["PROMPT_TEMPLATE"].format(text=context_text[:15000])
+    
+    # Text bereinigen und das Limit auf fette 60.000 erhöhen
+    clean_context = re.sub(r'\n\s*\n', '\n', context_text)
+    prompt = config["PROMPT_TEMPLATE"].format(text=clean_context[:60000])
 
-    for provider in config["AI_PRIORITY"]:
-        provider = provider.lower()
+    # --- SCHRITT 1: PRIORITÄT DYNAMISCH ANPASSEN ---
+    active_p = config.get("ACTIVE_PROVIDER", "Gemini").lower()
+    # Wir kopieren die Liste, um das Original in der config nicht zu verändern
+    priority_list = [p.lower() for p in config.get("AI_PRIORITY", ["gemini", "openai", "openrouter", "groq"])]
+    
+    # Wir schieben den aktiven Provider nach ganz vorne
+    if active_p in priority_list:
+        priority_list.remove(active_p)
+    priority_list.insert(0, active_p)
+
+    # --- SCHRITT 2: DIE SCHLEIFE DURCHLAUFEN ---
+    for provider in priority_list:
         key = api_keys.get(provider)
         if not key: continue
         
@@ -324,15 +539,33 @@ def ki_analyse(context_text, config, api_keys):
             if not client: continue
 
             if provider == "openrouter":
-                return "[Llama/Claude]: " + client.chat.completions.create(model=config["OPENROUTER_MODEL"], messages=[{"role": "user", "content": prompt}]).choices[0].message.content.strip()
+                return "[Llama/Claude]: " + client.chat.completions.create(
+                    model=config.get("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct"), 
+                    messages=[{"role": "user", "content": prompt}]
+                ).choices[0].message.content.strip()
+
             elif provider == "openai":
-                return "[OpenAI]: " + client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}]).choices[0].message.content.strip()
+                return "[OpenAI]: " + client.chat.completions.create(
+                    model=config.get("OPENAI_MODEL", "gpt-4o-mini"), 
+                    messages=[{"role": "user", "content": prompt}]
+                ).choices[0].message.content.strip()
+
             elif provider == "gemini":
-                return "[Gemini]: " + client.models.generate_content(model=config["GEMINI_MODEL"], contents=prompt).text.strip()
+                return "[Gemini]: " + client.models.generate_content(
+                    model=config.get("GEMINI_MODEL", "gemini-2.0-flash-exp"), 
+                    contents=prompt
+                ).text.strip()
+
             elif provider == "groq":
-                return "[Groq]: " + client.chat.completions.create(model=config["GROQ_MODEL"], messages=[{"role": "user", "content": prompt}]).choices[0].message.content.strip()
-        except: continue
-    return "KI-Fehler"
+                return "[Groq]: " + client.chat.completions.create(
+                    model=config.get("GROQ_MODEL", "llama-3.3-70b-versatile"), 
+                    messages=[{"role": "user", "content": prompt}]
+                ).choices[0].message.content.strip()
+        except Exception as e:
+            print(f"Fehler bei {provider}: {e}") 
+            continue
+
+    return "KI-Fehler (Alle Provider fehlgeschlagen)"
 
 # --- MAP GENERATION ---
 # --- HELPER FÜR CACHING ---
@@ -401,19 +634,28 @@ def generate_folium_map(data):
         
         if not lat or not lon: continue
 
+        # --- DATEN VORBEREITEN ---
         schultyp = str(entry.get('schultyp', 'Unbekannt'))
         ki = str(entry.get('ki_zusammenfassung', 'Keine Analyse'))
         kw = str(entry.get('keywords', '-'))
         st_lower = schultyp.lower()
         full_text_scan = (ki + " " + kw).lower()
         
-        # Farb-Logik
-        if any(word in full_text_scan for word in ["hochbegabt", "hochbegabte", "begabte", "akzeleration"]): color = "purple"
-        elif "gesamtschule" in st_lower: color = "green"
-        elif "gymnasium" in st_lower and ("haupt" in st_lower or "real" in st_lower): color = "orange"
-        elif "gymnasium" in st_lower: color = "blue"
-        elif "realschule" in st_lower: color = "red"
-        else: color = "gray"
+        # Farb-Logik mit Wortstämmen für Beugungen
+        trigger_stems = ["hochbegab", "begabung", "begabt", "akzeleration"]
+        
+        if any(stem in full_text_scan for stem in trigger_stems): 
+            color = "purple"
+        elif "gesamtschule" in st_lower: 
+            color = "green"
+        elif "gymnasium" in st_lower and ("haupt" in st_lower or "real" in st_lower or "verbund" in st_lower): 
+            color = "orange"
+        elif "gymnasium" in st_lower: 
+            color = "blue"
+        elif "realschule" in st_lower: 
+            color = "red"
+        else: 
+            color = "gray"
         
         pos_hint = "<br><i style='color:red; font-size:10px'>(Position geschätzt)</i>" if is_approx else ""
         html = f"""
@@ -423,7 +665,7 @@ def generate_folium_map(data):
             <hr>
             <p><b>KW:</b> {kw}</p>
             <div style="max-height:100px;overflow-y:auto;background:#f9f9f9;padding:5px;font-size:11px;border:1px solid #eee;">{ki}</div>
-            <br><a href=cfg"{entry.get('webseite','#')}" target="_blank">Webseite</a>
+            <br><a href="{entry.get('webseite','#')}" target="_blank">Webseite</a>
         </div>
         """
         folium.Marker([lat, lon], popup=folium.Popup(html, max_width=350), icon=folium.Icon(color=color, icon="info-sign" if not is_approx else "question-sign")).add_to(m)
@@ -439,15 +681,41 @@ def generate_folium_map(data):
         
     return m
 
+def sync_config():
+    """Synchronisiert die Provider-Wahl und die Modellnamen."""
+    st.session_state.config["ACTIVE_PROVIDER"] = st.session_state.provider_key
+    st.session_state.config["GEMINI_MODEL"] = st.session_state.gemini_model_key
+    st.session_state.config["OPENROUTER_MODEL"] = st.session_state.openrouter_model_key
+    st.session_state.config["GROQ_MODEL"] = st.session_state.groq_model_key
+    
+    
+    st.session_state.config["PROMPT_TEMPLATE"] = st.session_state.prompt_key
+    kw_raw = st.session_state.keywords_key
+    st.session_state.config["KEYWORD_LISTE"] = [k.strip() for k in kw_raw.split(",") if k.strip()]
+    
+    save_config(st.session_state.config)
+    st.toast("Einstellungen gespeichert!", icon="🤖")
+
 # --- MAIN APP LOGIC ---
 
 def main():
-    st.sidebar.title("🏫 Schul-Scanner Pro")
+    st.sidebar.title("🏫 school_miner")
     
     if 'config' not in st.session_state:
         st.session_state.config = load_config()
+    
+    if 'stop_scan' not in st.session_state:
+        st.session_state.stop_scan = False
 
     config = st.session_state.config
+    
+    if "df" not in st.session_state:
+        if os.path.exists(config["OUTPUT_FILE"]):
+            st.session_state.df = sanitize_dataframe(pd.read_excel(config["OUTPUT_FILE"]))
+        elif os.path.exists(config["INPUT_FILE"]):
+            st.session_state.df = sanitize_dataframe(pd.read_excel(config["INPUT_FILE"]))
+        else:
+            st.session_state.df = pd.DataFrame()
     
     # Systemcheck ---
     with st.sidebar.expander("🛠️ System-Status", expanded=True):
@@ -462,6 +730,26 @@ def main():
             st.success("Driver: Bereit ✅")
         else:
             st.warning("Driver: Nutze Auto-Modus ⚙️")
+    # --- FEHLER-PROTOKOLL (LOG) ---
+    with st.sidebar.expander("📝 Fehler-Protokoll (Log)", expanded=False):
+        log_file = "scanner_error.log"
+        if os.path.exists(log_file):
+            try:
+                with open(log_file, "r", encoding="utf-8") as f:
+                    log_content = f.read()
+                
+                if log_content.strip():
+                    st.text_area("Letzte Fehler:", value=log_content, height=200, disabled=True)
+                    if st.button("🗑️ Log leeren", use_container_width=True):
+                        open(log_file, 'w').close() # Datei leeren
+                        st.success("Log wurde geleert!")
+                        st.rerun()
+                else:
+                    st.info("Log ist leer. Bisher keine Fehler aufgetreten!")
+            except Exception as e:
+                st.error(f"Konnte Log nicht lesen: {e}")
+        else:
+            st.info("Keine Log-Datei vorhanden (bisher keine Fehler).")
     # CONFIG
     st.sidebar.title("⚙️ Einstellungen")
     
@@ -474,184 +762,249 @@ def main():
             "openrouter": st.text_input("OpenRouter Key", value=os.getenv("OPENROUTER_API_KEY", ""), type="password"),
         }
     
+    with st.sidebar.expander("🤖 KI-Konfiguration", expanded=False):
+    # 1. Auswahl des aktiven Anbieters
+        providers = ["Gemini", "OpenRouter", "Groq"]
+        current_p = config.get("ACTIVE_PROVIDER", "Gemini")
+    
+        st.radio(
+        "Aktiver Anbieter:",
+            options=providers,
+            index=providers.index(current_p) if current_p in providers else 0,
+            key="provider_key",
+            on_change=sync_config
+        )
+    
+        st.markdown("---")
+        st.caption("Modell-Definitionen:")
+    
+    # 2. Eingabefelder für die spezifischen Modelle
+    # Diese Felder laden ihre Werte aus der Config und speichern sie per Auto-Save
+        st.text_input(
+            "Gemini Modell:", 
+            value=config.get("GEMINI_MODEL", "gemini-2.0-flash-exp"),
+            key="gemini_model_key",
+            on_change=sync_config
+        )
+    
+        st.text_input(
+        "OpenRouter Modell:", 
+            value=config.get("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct"),
+            key="openrouter_model_key",
+            on_change=sync_config
+        )
+    
+        st.text_input(
+        "Groq Modell:", 
+            value=config.get("GROQ_MODEL", "llama-3.3-70b-versatile"),
+            key="groq_model_key",
+            on_change=sync_config
+        )
      
     # Sensitivity
     config["SENSITIVITY"] = st.sidebar.selectbox("Sensibilität", ["normal", "strict"], index=0 if config["SENSITIVITY"]=="normal" else 1, help="'strict' prüft auf 'Wir sind eine Schule' Sätze.")
     
     # Keyword Editor
-    with st.sidebar.expander("📝 Keywords & Typen"):
-        kws = st.text_area("Keywords (kommagetrennt)", ", ".join(config["KEYWORD_LISTE"]))
-        config["KEYWORD_LISTE"] = [k.strip() for k in kws.split(",") if k.strip()]
-        
-        types = st.text_area("Schultypen (kommagetrennt)", ", ".join(config["SCHULTYPEN_LISTE"]))
-        config["SCHULTYPEN_LISTE"] = [t.strip() for t in types.split(",") if t.strip()]
+    with st.sidebar.expander("📝 Keywords"):
+        st.text_area(
+        "Keywords (kommagetrennt)", 
+            value=", ".join(config["KEYWORD_LISTE"]),
+            key="keywords_key",      # Interner Name
+            on_change=sync_config    # Funktion startet bei Änderung
+        )
 
     # Prompt
     with st.sidebar.expander("🤖 KI Prompt"):
-        prompt_txt = st.text_area("Template", config["PROMPT_TEMPLATE"], height=150)
-        config["PROMPT_TEMPLATE"] = prompt_txt
+        st.text_area(
+        "Template", 
+            value=config["PROMPT_TEMPLATE"], 
+            height=150,
+            key="prompt_key",        # Interner Name für den Wert
+            on_change=sync_config    # Funktion startet bei Änderung
+        )
 
 #  ---Einstellungen Speichern---
-    st.sidebar.markdown("---")
-    if st.sidebar.button("🚀 Einstellungen speichern"):
+        st.sidebar.markdown("---")
+        if st.sidebar.button("🚀 Einstellungen speichern"):
         # WICHTIG: Nicht das Ergebnis der Funktion zuweisen!
-        success = save_config(st.session_state.config) 
-        if success:
-            st.sidebar.success("💾 config.json aktualisiert!")
-            time.sleep(0.5)
-            st.rerun() # App neu laden, um Änderungen zu festigen
+            success = save_config(st.session_state.config) 
+            if success:
+                st.sidebar.success("💾 config.json aktualisiert!")
+                time.sleep(0.5)
+                st.rerun() # App neu laden, um Änderungen zu festigen
 
 # --- Shutdown ---
-    st.sidebar.markdown("---")
-    if st.sidebar.button("🚀 Programm beenden"):
-        st.sidebar.info("Schließe Server... Du kannst diesen Tab jetzt schließen.")
+        st.sidebar.markdown("---")
+        if st.sidebar.button("🚀 Programm beenden"):
+            st.sidebar.info("Schließe Server... Du kannst diesen Tab jetzt schließen.")
        # Kurze Verzögerung, damit die Meldung noch angezeigt wird
-        time.sleep(1)
+            time.sleep(1)
        # Sendet das Signal zum Beenden an den eigenen Prozess
-        os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGTERM)
 
     # 2. MAIN TABS
     tab1, tab2, tab3, tab4 = st.tabs(["📂 Daten & Upload", "🚀 Auto-Scan", "🗺️ Karte", "✏️ Einzeln bearbeiten"])
-    
-    # --- TAB 1: DATA ---
+
+# --- TAB 1: DATA ---
     with tab1:
-        st.header("Datenverwaltung")
+        st.header("Daten-Management & Vorschau")
         
-        uploaded_file = st.file_uploader("Excel-Datei hochladen (Format: Name, leer, Ort)", type=["xlsx"])
+        # 1. Datenvorschau
+        st.subheader("📊 Aktuelle Ergebnisdatei")
+        if st.session_state.df.empty:
+            st.info("Noch keine Daten vorhanden. Bitte lade eine Quelldatei hoch oder synchronisiere.")
+        else:
+            st.dataframe(st.session_state.df, height=350, width="stretch")
+            st.caption(f"Insgesamt {len(st.session_state.df)} Einträge geladen.")
         
-        if 'df' not in st.session_state:
-            # Versuche lokale Datei zu laden wenn kein Upload
-            if os.path.exists(config["OUTPUT_FILE"]):
-                st.session_state.df = pd.read_excel(config["OUTPUT_FILE"])
-            elif uploaded_file:
-                # Initial Load from Upload
-                 pass # Wird unten behandelt
-            else:
-                st.session_state.df = pd.DataFrame(columns=["schulname", "ort", "webseite", "schultyp", "keywords", "ki_zusammenfassung"])
-
-        if uploaded_file:
-            if st.button("📥 Neue Daten aus Upload importieren"):
-                raw_df = pd.read_excel(uploaded_file, header=None)
-                # Simple logic: col 0 is name, col 2 is ort (based on original script)
-                new_data = []
-                for _, row in raw_df.iterrows():
-                    if len(row) > 2:
-                        name = str(row[0]).strip()
-                        ort = str(row[2]).strip()
-                        if len(name) > 3 and "schule" in name.lower():
-                            new_data.append({
-                                "schulname": name, "ort": ort, 
-                                "webseite": "Nicht gefunden", "schultyp": "", 
-                                "keywords": "", "ki_zusammenfassung": ""
-                            })
-                
-                # Merge with existing
-                if not st.session_state.df.empty:
-                    existing_names = set(st.session_state.df["schulname"].astype(str))
-                    added_count = 0
-                    for item in new_data:
-                        if item["schulname"] not in existing_names:
-                            st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([item])], ignore_index=True)
-                            added_count += 1
-                    st.success(f"{added_count} neue Schulen hinzugefügt.")
-                else:
-                    st.session_state.df = pd.DataFrame(new_data)
-                    st.success("Datenbank neu erstellt.")
-
-        st.dataframe(st.session_state.df, use_container_width=True)
+        st.divider()
         
-        # Download Button
-        if not st.session_state.df.empty:
-            @st.cache_data
-            def convert_df(df):
-                return df.to_excel(index=False).encode('utf-8') # Needs openpyxl installed, otherwise use CSV
+        # 2. Buttons & Uploads
+        col_a, col_b = st.columns(2)
 
-            # Workaround for Excel Bytes without IO buffer complexity in snippet
-            import io
-            buffer = io.BytesIO()
-            with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                st.session_state.df.to_excel(writer, index=False)
-                
-            st.download_button(
-                label="💾 Ergebnisse herunterladen (Excel)",
-                data=buffer,
-                file_name="schulen_ergebnisse_streamlit.xlsx",
-                mime="application/vnd.ms-excel"
-            )
+        with col_a:
+            st.subheader("🔄 1. Daten synchronisieren")
+            st.info(f"Sucht in '{config['INPUT_FILE']}' nach neuen Einträgen und hängt sie sicher an.")
+            if st.button("Jetzt Synchronisieren", type="primary", use_container_width=True):
+                st.session_state.df = sync_logic(st.session_state.df, config) 
+                save_dataframe(st.session_state.df, config) 
+                st.rerun()
 
-    # --- TAB 2: SCANNER ---
+        with col_b:
+            st.subheader("📥 2. Neue Quelldatei laden")
+            st.info(f"Ersetzt die lokale '{config['INPUT_FILE']}' für den nächsten Sync.")
+            uploaded_file = st.file_uploader("Quelldatei (Excel, ohne Header)", type=["xlsx"])
+            
+            if uploaded_file and st.button("Quelldatei ersetzen", width="stretch"):
+                try:
+                    # Speichert die hochgeladene Datei physisch unter dem Namen der INPUT_FILE ab
+                    with open(config["INPUT_FILE"], "wb") as f:
+                        f.write(uploaded_file.getbuffer())
+                    st.success(f"✅ Datei '{config['INPUT_FILE']}' wurde aktualisiert! Du kannst nun links auf Synchronisieren klicken.")
+                except Exception as e:
+                    st.error(f"Fehler beim Speichern der Datei: {e}")
+
+# --- TAB 2: SCANNER ---
     with tab2:
         st.header("Automatischer Crawler")
         
-        col1, col2 = st.columns(2)
+        # 1. Fortschritt-Management
+        if 'df' not in st.session_state:
+            st.session_state.df = load_data(config)
+        if 'current_scan_idx' not in st.session_state:
+        # Index aus der Config!
+            st.session_state.current_scan_idx = config.get("AUTO_RESUME_IDX", 0)
+        if 'scan_active' not in st.session_state:
+            st.session_state.scan_active = False
+
+        col_info, col_reset = st.columns([3, 1])
+        with col_info:
+            st.info(f"Nächster Schritt: Zeile {st.session_state.current_scan_idx + 1}")
+        with col_reset:
+            # Button zum Zurücksetzen des Fortschritts
+            if st.button("🔄 Scan-Fortschritt auf 0 zurücksetzen", use_container_width=True):
+                st.session_state.current_scan_idx = 0
+                config["AUTO_RESUME_IDX"] = 0
+                with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                    json.dump(config, f, indent=4, ensure_ascii=False)
+                st.toast("Fortschritt wurde für App und CLI auf 0 gesetzt!", icon="✅")
+                st.rerun()
+
+        # 2. Einstellungen
+        # 2. Einstellungen & Steuerung
+        col1, col2, col3 = st.columns([2, 1, 1])
         with col1:
-            scan_mode = st.radio("Was scannen?", ["Nur neue/leere Einträge", "Alles neu scannen (Überschreiben)"])
+            scan_mode = st.radio("Modus:", ["Nur neue/leere Einträge", "Alles überschreiben"], horizontal=True)
+        
         with col2:
-            st.info("Der Browser läuft im Hintergrund (Headless). Bitte warten.")
-
-        if st.button("🚀 Scan starten", type="primary"):
-            df = st.session_state.df
-            if df.empty:
-                st.warning("Keine Daten vorhanden.")
-            else:
-                progress_bar = st.progress(0)
-                status_text = st.empty()
-                log_container = st.container(height=300)
+            st.write("") # Abstandshalter
+            start_trigger = st.button("🚀 Start", type="primary", use_container_width=True)
+            
+        with col3:
+            st.write("") # Abstandshalter
+            # Der Stopp-Button setzt die Variable im Session State auf True
+            if st.button("🛑 Stopp", type="secondary", use_container_width=True):
+                st.session_state.stop_scan = True
                 
+
+        if start_trigger:
+            # WICHTIG: Beim Starten setzen wir den Stopp-Schalter zurück auf False
+            st.session_state.stop_scan = False
+            
+            df = st.session_state.df
+            total_rows = len(df)
+            
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            driver = None
+            try:
+                status_text.write("🌐 Initialisiere Browser...")
                 driver = get_driver()
+                
                 if driver:
-                    try:
-                        total_rows = len(df)
-                        for index, row in df.iterrows():
-                            # Skip check
-                            if scan_mode == "Nur neue/leere Einträge":
-                                ki_val = str(row.get('ki_zusammenfassung', ''))
-                                if ki_val and ki_val not in config["ERROR_MARKERS"] and len(ki_val) > 10:
-                                    continue
-                            
-                            status_text.text(f"Scanne: {row['schulname']}...")
-                            
-                            url, typ, kw, ctx = crawl_and_analyze(driver, row['schulname'], row['ort'], config)
-                            
-                            # Update DataFrame in Session State
-                            df.at[index, 'webseite'] = url
-                            df.at[index, 'schultyp'] = typ
-                            df.at[index, 'keywords'] = kw
-                            
-                            ki_result = "Zu wenige Infos"
-                            if (typ or kw) and ctx:
-                                log_container.code(f"AI Analysing: {row['schulname']}")
-                                ki_result = ki_analyse(ctx, config, api_keys)
-                            elif config["SENSITIVITY"] == "strict" and not ctx:
-                                ki_result = "Strict Filter Block"
-                            else:
-                                ki_result = "Keine relevanten Daten"
-                            
-                            df.at[index, 'ki_zusammenfassung'] = ki_result
-                            
-                            log_container.write(f"✅ {row['schulname']} -> {typ} | {kw}")
-                            progress_bar.progress((index + 1) / total_rows)
-                            
-                            # Autosave logic (optional, here update session state is enough till download)
-                            st.session_state.df = df 
-                            
-                            try:
-                                df.to_excel(config["OUTPUT_FILE"], index=False, engine='openpyxl')
-                                # Visuelles Feedback für jede Schule
-                                st.toast(f"Gespeichert: {row['schulname']}", icon="💾")
-                            except Exception as e:
-                                st.warning(f"Konnte Datei nicht zwischenspeichern: {e}")
+                    for i in range(st.session_state.current_scan_idx, total_rows):
+                        # HIER wird geprüft, ob der Stopp-Button gedrückt wurde
+                        if st.session_state.get("stop_scan", False):
+                            st.warning(f"⚠️ Scan bei Zeile {i+1} angehalten.")
+                            break
+                        
+                        entry = df.iloc[i].to_dict()
+                        progress_bar.progress((i + 1) / total_rows)
 
-                            st.balloons() # Kleiner visueller Feiereffekt am Ende
+                        # Prüfen ob übersprungen werden soll
+                        if scan_mode == "Nur neue/leere Einträge" and not is_entry_empty(entry, config):
+                            st.session_state.current_scan_idx = i + 1
+                            continue
 
-                        st.success("Scan abgeschlossen!")
-                    except Exception as e:
-                        st.error(f"Fehler im Scan-Prozess: {e}")
-                    finally:
-                        driver.quit()
+                        status_text.write(f"🔍 Scanne ({i+1}/{total_rows}): **{entry['schulname']}**...")
+                        
+                        # --- DER SCHUTZSCHILD FÜR STREAMLIT ---
+                        try:
+                            # Crawling & Analyse
+                            url, typ, kw, context = crawl_and_analyze(driver, entry['schulname'], entry['ort'], config)
+                            
+                            # KI-Teil 
+                            ki_res = "Keine Daten"
+                            if context:
+                                ki_res = ki_analyse(context, config, api_keys)
+
+                            # Daten zurückschreiben
+                            st.session_state.df.at[i, 'webseite'] = url
+                            st.session_state.df.at[i, 'schultyp'] = typ
+                            st.session_state.df.at[i, 'keywords'] = kw
+                            st.session_state.df.at[i, 'ki_zusammenfassung'] = ki_res
+
+                        except Exception as inner_e:
+                            # Loggen, Toast anzeigen und Fehler in die Zelle schreiben
+                            error_msg = f"Fehler bei Zeile {i+1} ({entry.get('schulname')}):\n{traceback.format_exc()}"
+                            logging.error(error_msg)
+                            st.toast(f"⚠️ Fehler bei {entry.get('schulname')} - Schule wurde übersprungen!", icon="⚠️")
+                            st.session_state.df.at[i, 'ki_zusammenfassung'] = "Absturz während des Scans"
+                        # --- ENDE SCHUTZSCHILD ---
+
+                        
+                        # Fortschritt speichern
+                        st.session_state.current_scan_idx = i + 1
+                        
+                        # Fortschritt sofort in die globale Config schreiben
+                        config["AUTO_RESUME_IDX"] = i + 1
+                        with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
+                            json.dump(config, f, indent=4, ensure_ascii=False)
+
+                    if st.session_state.current_scan_idx >= total_rows and not st.session_state.stop_scan:
+                        st.success("🎉 Scan erfolgreich beendet!")
+                        st.balloons()
                 else:
-                    st.error("Konnte Treiber nicht laden.")
+                    st.error("Browser konnte nicht gestartet werden.")
 
+            except Exception as e:
+                st.error(f"Fehler: {e}")
+            finally:
+                if driver:
+                    driver.quit()
+                status_text.empty()
+                
     # --- TAB 3: MAP ---
     with tab3:
         st.header("Interaktive Karte")
@@ -663,67 +1016,79 @@ def main():
                     folium_map = generate_folium_map(st.session_state.df.to_dict('records'))
                     st_folium(folium_map, width=1000, height=600)
 
-    # --- TAB 4: EDITOR ---
+# --- TAB 4: EDITOR ---
     with tab4:
         st.header("Manuelle Bearbeitung")
         
         if st.session_state.df.empty:
-            st.warning("Keine Daten.")
+            st.warning("Keine Daten geladen. Bitte in Tab 1 eine Datei importieren.")
         else:
-            # Select Box for School
-            school_names = st.session_state.df["schulname"].tolist()
-            selected_school = st.selectbox("Schule wählen", school_names)
+            # Auswahl der Schule
+            idx = st.selectbox(
+                "Schule zum Bearbeiten auswählen:", 
+                range(len(st.session_state.df)), 
+                format_func=lambda x: f"{st.session_state.df.iloc[x]['schulname']} ({st.session_state.df.iloc[x]['ort']})"
+            )
             
-            # Find row
-            idx = st.session_state.df[st.session_state.df["schulname"] == selected_school].index[0]
             row = st.session_state.df.iloc[idx]
             
             col_e1, col_e2 = st.columns(2)
             
             with col_e1:
-                new_name = st.text_input("Name", row["schulname"])
+                new_name = st.text_input("Name der Schule", row["schulname"])
                 new_ort = st.text_input("Ort", row["ort"])
-                new_url = st.text_input("Webseite", row["webseite"])
+                new_url = st.text_input("Webseite URL", row["webseite"])
                 
-                if st.button("🌐 URL testen / Deep Scan"):
-                     driver = get_driver()
-                     if driver:
-                        st.info(f"Analysiere: {new_url}")
-                        u, t, k, c = crawl_and_analyze(driver, new_url, new_ort, config) # new_url is handled as manual because starts with http
-                        st.session_state.df.at[idx, 'schultyp'] = t
-                        st.session_state.df.at[idx, 'keywords'] = k
+                # Button-Reihe
+                c1, c2 = st.columns(2)
+                with c1:
+                    is_valid = isinstance(new_url, str) and new_url.startswith("http")
+                    if is_valid:
+                        st.link_button("↗️ URL im Browser öffnen", new_url, width="stretch")
+                    else:
+                        st.button("↗️ URL öffnen", disabled=True, width="stretch")
+                
+                with c2:
+                    if st.button("🔍 Deep Scan (KI)", width="stretch"):
+                        
+                        driver = get_driver()
+                        if driver:
+                           st.info(f"Analysiere: {new_url}")
+                           u, t, k, c = crawl_and_analyze(driver, new_url, new_ort, config) 
+                           st.session_state.df.at[idx, 'schultyp'] = t
+                           st.session_state.df.at[idx, 'keywords'] = k
                         if c:
                              ai_res = ki_analyse(c, config, api_keys)
                              st.session_state.df.at[idx, 'ki_zusammenfassung'] = ai_res
                         driver.quit()
                         st.rerun()
-
-            with col_e2:
-                new_typ = st.text_area("Schultyp", row["schultyp"])
-                new_kw = st.text_area("Keywords", row["keywords"])
-                new_ki = st.text_area("KI Zusammenfassung", row["ki_zusammenfassung"], height=200)
+                        
             
-            if st.button("💾 Änderungen speichern & in Ergebnisdatei schreiben"):
-               # Update Session State
-               st.session_state.df.at[idx, 'schulname'] = new_name
-               st.session_state.df.at[idx, 'ort'] = new_ort
-               st.session_state.df.at[idx, 'webseite'] = new_url
-               st.session_state.df.at[idx, 'schultyp'] = new_typ
-               st.session_state.df.at[idx, 'keywords'] = new_kw
-               st.session_state.df.at[idx, 'ki_zusammenfassung'] = new_ki
-               st.success("Gespeichert!")
-    
-    
-    # Update Datei
-               try:
-                st.session_state.df.to_excel(config["OUTPUT_FILE"], index=False, engine='openpyxl')
-                st.toast("Datei erfolgreich aktualisiert!", icon="💾")
+            with col_e2:
+                new_typ = st.text_area("Schultyp", row.get("schultyp", ""))
+                new_kw = st.text_area("Gefundene Keywords", row.get("keywords", ""))
+                new_ki = st.text_area("KI Zusammenfassung", row.get("ki_zusammenfassung", ""), height=200)
+
+            st.divider()
+            
+            # DER SPEICHER-BUTTON 
+            if st.button("💾 Änderungen dauerhaft speichern", type="primary", width="stretch"):
+                # 1. Update im Arbeitsspeicher (Session State)
+                st.session_state.df.at[idx, 'schulname'] = new_name
+                st.session_state.df.at[idx, 'ort'] = new_ort
+                st.session_state.df.at[idx, 'webseite'] = new_url
+                st.session_state.df.at[idx, 'schultyp'] = new_typ
+                st.session_state.df.at[idx, 'keywords'] = new_kw
+                st.session_state.df.at[idx, 'ki_zusammenfassung'] = new_ki
                 
-                # reload App
-                # 
-                st.rerun()
-               except Exception as e:
-                st.error(f"Fehler beim Speichern: {e}")
+                # 2. Update auf der Festplatte
+                if save_dataframe(st.session_state.df, config): 
+                    st.toast("Erfolgreich gespeichert!", icon="✅")
+                    time.sleep(1)
+                    st.rerun()
+
+
+
 
 if __name__ == "__main__":
     main()
