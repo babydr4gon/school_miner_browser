@@ -568,7 +568,7 @@ def ki_analyse(context_text, config, api_keys):
     return "KI-Fehler (Alle Provider fehlgeschlagen)"
 
 # --- MAP GENERATION ---
-# --- HELPER FÜR CACHING ---
+
 @st.cache_data(show_spinner=False)
 def get_coordinates(name, ort):
     """
@@ -711,11 +711,20 @@ def main():
     
     if "df" not in st.session_state:
         if os.path.exists(config["OUTPUT_FILE"]):
+            # Normaler Start: Ergebnisdatei existiert bereits
             st.session_state.df = sanitize_dataframe(pd.read_excel(config["OUTPUT_FILE"]))
+            
         elif os.path.exists(config["INPUT_FILE"]):
-            st.session_state.df = sanitize_dataframe(pd.read_excel(config["INPUT_FILE"]))
+            # Erster Start: Nur Quelldatei da -> Wir erzwingen einen sauberen Sync 
+            # und legen die Ergebnisdatei SOFORT physisch auf der Festplatte an!
+            empty_df = pd.DataFrame(columns=['schulname', 'ort', 'webseite', 'schultyp', 'keywords', 'ki_zusammenfassung'])
+            st.session_state.df = sync_logic(empty_df, config)
+            save_dataframe(st.session_state.df, config)
+            
         else:
-            st.session_state.df = pd.DataFrame()
+            # Fallback: Weder Quelle noch Ergebnis da -> Leere Dummy-Datei anlegen
+            st.session_state.df = pd.DataFrame(columns=['schulname', 'ort', 'webseite', 'schultyp', 'keywords', 'ki_zusammenfassung'])
+            save_dataframe(st.session_state.df, config)
     
     # Systemcheck ---
     with st.sidebar.expander("🛠️ System-Status", expanded=True):
@@ -910,8 +919,7 @@ def main():
                 st.toast("Fortschritt wurde für App und CLI auf 0 gesetzt!", icon="✅")
                 st.rerun()
 
-        # 2. Einstellungen
-        # 2. Einstellungen & Steuerung
+        # 2. Einstellungen        
         col1, col2, col3 = st.columns([2, 1, 1])
         with col1:
             scan_mode = st.radio("Modus:", ["Nur neue/leere Einträge", "Alles überschreiben"], horizontal=True)
@@ -947,6 +955,7 @@ def main():
                         # HIER wird geprüft, ob der Stopp-Button gedrückt wurde
                         if st.session_state.get("stop_scan", False):
                             st.warning(f"⚠️ Scan bei Zeile {i+1} angehalten.")
+                            save_dataframe(st.session_state.df, config) # <-- NEU: Sofort speichern!
                             break
                         
                         entry = df.iloc[i].to_dict()
@@ -992,9 +1001,14 @@ def main():
                         with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
                             json.dump(config, f, indent=4, ensure_ascii=False)
 
+                        if (i + 1) % 5 == 0 or (i + 1) == total_rows:
+                            save_dataframe(st.session_state.df, config)
+                            st.toast(f"💾 Zwischenstand gespeichert ({i+1}/{total_rows})", icon="💾")
+
                     if st.session_state.current_scan_idx >= total_rows and not st.session_state.stop_scan:
                         st.success("🎉 Scan erfolgreich beendet!")
                         st.balloons()
+                    
                 else:
                     st.error("Browser konnte nicht gestartet werden.")
 
