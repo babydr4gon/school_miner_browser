@@ -44,7 +44,7 @@ eingeben. Falls es dabei unter Windows Fehlermeldungen gibt, dass die Installati
    OPENROUTER_API_KEY=dein_schluessel_hier
    ```
 
-**Schulliste anlegen:** Eine Liste mit Schulnamen und Adressen herunterladen und unter "schulen.xlsx" abspeichern. Das Skript erwartet, dass sich der Name der Schue in der Spalte A und der Ort in Spalte C befinden. Wer das ändern möchte, muss im Code folgende Angaben anpassen (0 ist A und 2 ist C):
+**Schulliste anlegen:** Eine Liste mit Schulnamen und Adressen herunterladen und unter "schulen.xlsx" abspeichern. Das Skript erwartet, dass sich der Name der Schule in der Spalte A und der Ort in Spalte C befinden. Wer das ändern möchte, muss im Code folgende Angaben anpassen (0 ist A und 2 ist C):
 
 ```bash
 "COLUMN_NAME_IDX": 0,
@@ -133,7 +133,7 @@ Schulwebseiten zu scannen ist eine Herausforderung. Viele dieser Seiten sind ent
 **Viele graue Marker auf der Landkarte:** Wahrscheinlich sind viele Schulen noch ohne Schultyp und werden dann den anderen Farben nicht zugeordnet. Da hilft nur eine manuelle Kontrolle oder ein ganz neuer Autoscan.
 
 <h1>Kauf mir einen Kaffee! </h1>
-Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-). Ich freue mnich darüber.
+Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-). Ich freue mich darüber.
 
 <p align="center">
   <a href="https://www.buymeacoffee.com/gernotzumc2" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 90px !important;width: 324px !important;"></a>
