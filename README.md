@@ -20,7 +20,7 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
    ```bash
    OPENROUTER_API_KEY=dein_schluessel_hier
    ```
-**Schulliste anlegen:** Eine Liste mit Schulnamen und Adressen herunterladen und unter "schulen.xlsx" abspeichern. Das Skript erwartet, dass sich der Name der Schue in der Spalte A und der Ort in Spalte C befinden. Wer das ändern möchte, muss im Code folgende Angaben anpassen (0 ist A und 2 ist C): 
+**Schulliste anlegen:** Eine Liste mit Schulnamen und Adressen herunterladen und unter "schulen.xlsx" abspeichern. Das Skript erwartet, dass sich der Name der Schule in der Spalte A und der Ort in Spalte C befinden. Wer das ändern möchte, muss im Code folgende Angaben anpassen (0 ist A und 2 ist C): 
 
 ```bash
 "COLUMN_NAME_IDX": 0,
@@ -39,7 +39,7 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 eingeben. Falls es dabei unter Windows Fehlermeldungen gibt, dass die Installation zwar erfolgreich aber "not on PATH" war, muss gegebenenfalls noch eine System-Einstellung verändert werden. Wie das geht, steht <a href="https://www.geeksforgeeks.org/python/how-to-add-python-to-windows-path/">hier</a>. 
 
 
-**API-Keys:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen. Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen.
+**API-Keys:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen.
    ```bash
    OPENROUTER_API_KEY=dein_schluessel_hier
    ```
@@ -100,11 +100,11 @@ Bei manchen Systemvarianten kann es sein, dass sich der Browser nicht automatisc
 
 Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als offizielle Webseite der Schule angenommen und gegebenenfalls von der KI ausgewertet wird. 
 
-**Keywords & Typen:** Hier lassen sich bestimme Schlüsselwörter festlegen, nach denen die Webseiten durchsucht werden. Einige sind schon voreingestellt, jede Änderung an dieser Stelle wird aber übernommen. Gespeichert werden die Eintstellungen in einer Daei config.json, die automatisch angelegt wird.
+**Keywords & Typen:** Hier lassen sich bestimme Schlüsselwörter festlegen, nach denen die Webseiten durchsucht werden. Einige sind schon voreingestellt, jede Änderung an dieser Stelle wird aber übernommen. Gespeichert werden die Einstellungen in einer Daei config.json, die automatisch angelegt wird.
 
 <img src="https://github.com/babydr4gon/school_miner/blob/main/images/Browser.jpg" alt="Kontrolle" width="650" height="650"/>
 
-**KI-Prompt:** Hier lässt sich der Prompt festlegen, der zum Beispiel für die Beschreibung des pädagogischen Konzepts der jeweiligen Schule genutzt werden kann. Auch hier ist gibt es eine sehr einfache Vorgabe und jede Änderung an der Stelle wird in der config.json-Datei gespeichert und übenommen.
+**KI-Prompt:** Hier lässt sich der Prompt festlegen, der zum Beispiel für die Beschreibung des pädagogischen Konzepts der jeweiligen Schule genutzt werden kann. Auch hier ist gibt es eine sehr einfache Vorgabe und jede Änderung an der Stelle wird in der config.json-Datei gespeichert und übernommen.
 
 **Einstellungen speichern:** Übernimmt die aktuellen Änderungen bei KI-Prompt, Keywords, Sensibilität etc. in die config.json.
 
@@ -120,7 +120,7 @@ Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als of
 
 <h1>Tipps und Tricks </h1>
 
-Die meisten Schulwebseiten sind...schlecht. Viele dieser Seiten sind entweder veraltet oder ziemlich zusammengestückelt. Deshalb muss man, wenn man erfolgreich Informationen sammeln will, etwas Zeit und Mühe investieren. Dazu folgende Ideen:
+Schulwebseiten zu scannen ist eine Herausforderung. Viele dieser Seiten sind entweder veraltet oder ziemlich zusammengestückelt. Deshalb muss man, wenn man erfolgreich Informationen sammeln will, etwas Zeit und Mühe investieren. Dazu folgende Ideen:
 
 **Mit einer kleinen Testliste anfangen:** Es hat sich bewährt, zunächst höchstens 10 Schulen als Quelle zu nehmen und das Programm ein paar Mal mit verschiedenen Keywords und einem individuell gestalteten Prompt durchlaufen zu lassen. Sehr unterschiedlich wirkt es sich beispielsweise aus, die Sensibilität von "strict" auf "normal" zu stellen. Dann tauchen zwar plötzlich vielleicht ein paar Zeitungsberichte in der Suche auf, aber da stehen manchmal auch ganz interessante Sachen über die gesuchte Schule drin. Die Keywordliste zu erweitern kann dafür sorgen, dass das Skript auf Unterseiten der Schulhomepage Dinge findet, die sonst verloren gegangen wären.
 
