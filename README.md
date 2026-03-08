@@ -7,7 +7,7 @@
 
 Dieses Tool hilft Eltern, Schulwebseiten automatisch nach Keywords (MINT, Ganztag, Montessori, etc.) zu durchsuchen und die pädagogischen Konzepte mit KI zusammenzufassen.
 
-Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen Namen, das <a href="https://github.com/babydr4gon/school_miner_browser/tree/main">hier</a> zu finden ist. 
+Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen Namen, das <a href="https://github.com/babydr4gon/school_miner">hier</a> zu finden ist. 
 
 <h1>Automatische Installation</h1>
 
