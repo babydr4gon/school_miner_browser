@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://github.com/babydr4gon/school_miner/blob/main/images/dragon_mine.png" alt="School_miner icon" width="400" height="400"/>
+  <img src="https://github.com/babydr4gon/school_miner/blob/assets/images/dragon_mine.png" alt="School_miner icon" width="400" height="400"/>
   <br>
   School_Miner
 </h1>
@@ -80,7 +80,7 @@ Das Skript wird für jede der Schulen in dieser Liste nach der offiziellen Webse
 
 Am Ende wird  eine Tabelle mit den Ergebnissen der Suche erstellt. Darin stehen der Name und der Ort der Schule, die gefundenen Keywords, die verwendete Webseite und die Zusammenfassung der KI. Es gibt die Möglichkeit, Fehler, die bei der automatisierten Suche passieren, individuell zu korrigieren. 
 
-<img src="https://github.com/babydr4gon/school_miner/blob/main/images/Karte.jpg" alt="Landkarte" width="650" height="650"/>
+<img src="https://github.com/babydr4gon/school_miner/blob/assets/images/Karte.jpg" alt="Landkarte" width="650" height="650"/>
 
 Abschließend kann man sich eine Landkarte erstellen lassen. Auf dieser Landkarte sind die Schulen mit Markern eingezeichnet. Klickt man auf einen der Marker, erscheint eine kurze Übersicht: der Name der Schule, die gefundenen Keywords und die KI-Zusammenfassung. 
 
@@ -92,7 +92,7 @@ Bei manchen Systemvarianten kann es sein, dass sich der Browser nicht automatisc
 
 **Systemstatus:** Automatisch wird an dieser Stelle überprüft, ob nötige Werkzeuge für die Nutzung des Skripts installiert sind. Erwartet werden die Python-Module aus der Datei requirements.txt sowie der Internetbrower Chrome (Windows / Linux) oder Chromium (Linux).
 
-<img src="https://github.com/babydr4gon/school_miner_browser/blob/main/images/StartBrowser.jpg" alt="Hauptmenü" width="650" height="650"/>
+<img src="https://github.com/babydr4gon/school_miner_browser/blob/assets/images/StartBrowser.jpg" alt="Hauptmenü" width="650" height="650"/>
 
 **API Keys:** In der linken Seitenleiste sind die Felder für API Keys (OpenAI, Gemini, etc.). Diese müssen dort eingetragen werden.
 
@@ -102,7 +102,7 @@ Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als of
 
 **Keywords & Typen:** Hier lassen sich bestimme Schlüsselwörter festlegen, nach denen die Webseiten durchsucht werden. Einige sind schon voreingestellt, jede Änderung an dieser Stelle wird aber übernommen. Gespeichert werden die Einstellungen in einer Daei config.json, die automatisch angelegt wird.
 
-<img src="https://github.com/babydr4gon/school_miner/blob/main/images/Browser.jpg" alt="Kontrolle" width="650" height="650"/>
+<img src="https://github.com/babydr4gon/school_miner/blob/assets/images/Browser.jpg" alt="Kontrolle" width="650" height="650"/>
 
 **KI-Prompt:** Hier lässt sich der Prompt festlegen, der zum Beispiel für die Beschreibung des pädagogischen Konzepts der jeweiligen Schule genutzt werden kann. Auch hier ist gibt es eine sehr einfache Vorgabe und jede Änderung an der Stelle wird in der config.json-Datei gespeichert und übernommen.
 
