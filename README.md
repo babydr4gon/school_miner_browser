@@ -15,7 +15,8 @@ Es handelt sich um die Browserversion des Kommandozeilentools mit dem gleichen N
 
 **Repository klonen** oder als ZIP herunterladen und entpacken.
 
-**API Keys:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen.  Ohne API-Key läuft das Skript auch, liefert aber keine KI-Zusammenfassungen.
+**API Keys:** Die Datei .env.example in .env umbenennen und API-Keys hinter dem Gleichheitszeichen einfügen.
+
    ```bash
    OPENROUTER_API_KEY=dein_schluessel_hier
    ```
@@ -73,7 +74,7 @@ Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1
 
 In allen Bundesländern gibt es Listen mit den Namen und Adressen der Schulen. Sie werden in der Regel von den Kultusministerien oder von den statistischen Landesämtern gepflegt.
 
-Diese Listen muss man für die eigenen Bedürfnisse anpassen, also beispielsweise die Schulen rauslöschen, die geographisch zu weit weg sind. Voreingestellt ist als Name für diese Liste "schulen.xlsx". 
+Diese Listen muss man für die eigenen Bedürfnisse anpassen, also beispielsweise die Schulen löschen, die geographisch zu weit weg sind. Voreingestellt ist als Name für diese Liste "schulen.xlsx". 
 
 Das Skript wird für jede der Schulen in dieser Liste nach der offiziellen Webseite suchen. Dort identifiziert es den Schultyp und erkennt bestimmte Keywords. Sobald es diese Dinge gefunden hat, versucht eine KI die gefundenen Informationen zum Konzept oder zu Besonderheiten der Schule in wenigen Sätzen zusammenzufassen. 
 
