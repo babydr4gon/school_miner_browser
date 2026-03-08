@@ -72,7 +72,7 @@ Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1
 
 <h3>Die Basis: eine Liste mit Schulen</h3>
 
-In allen Bundesländern gibt es Listen mit den Namen und Adressen der Schulen. Sie werden in der Regel von den Kultusministerien oder von den statistischen Landesämtern gepflegt.
+In allen Bundesländern in Deutschland gibt es Listen mit den Namen und Adressen der Schulen. Sie werden in der Regel von den Kultusministerien oder von den statistischen Landesämtern gepflegt.
 
 Diese Listen muss man für die eigenen Bedürfnisse anpassen, also beispielsweise die Schulen löschen, die geographisch zu weit weg sind. Voreingestellt ist als Name für diese Liste "schulen.xlsx". 
 
