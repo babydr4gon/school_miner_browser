@@ -130,7 +130,7 @@ Schulwebseiten zu scannen ist eine Herausforderung. Viele dieser Seiten sind ent
 
 **Eine andere KI ausprobieren:** Das Programm bietet die Möglichkeit, zwischen unterschiedlichen KI-Anbietern und Modellen zu wechseln. Dabei können sehr unterschiedliche Antworten herauskommen.
 
-**Viele graue Marker auf der Landkarte:** Wahrscheinlich sind viele Schulen noch ohne Schultyp und werden dann den anderen Farben nicht zugeordnet. Da hilft nur eine manuelle Kontrolle oder ein ganz neuer Autoscan.
+**Viele beige Marker auf der Landkarte:** Wahrscheinlich sind viele Schulen noch ohne Schultyp und werden dann den anderen Farben nicht zugeordnet. Da hilft nur eine manuelle Kontrolle oder ein ganz neuer Autoscan.
 
 <h1>Kauf mir einen Kaffee! </h1>
 Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-). Ich freue mich darüber.
