@@ -100,6 +100,8 @@ Bei manchen Systemvarianten kann es sein, dass sich der Browser nicht automatisc
 
 Im Modus "strict" werden weitere Bedingungen genannt, damit eine Webseite als offizielle Webseite der Schule angenommen und gegebenenfalls von der KI ausgewertet wird. 
 
+**Pause Kartengenerierung (Sek.):** Falls man sehr große Listen hat und deshalb sehr umfangreiche Karten erstellt, kann es passieren, dass man vom OSM-Kartenserver blockiert wird. In diesem Fall sollte man die Zeitabstände zwischen den Anfragen an den Server hier erhöhen.
+
 **Keywords & Typen:** Hier lassen sich bestimme Schlüsselwörter festlegen, nach denen die Webseiten durchsucht werden. Einige sind schon voreingestellt, jede Änderung an dieser Stelle wird aber übernommen. Gespeichert werden die Einstellungen in einer Daei config.json, die automatisch angelegt wird.
 
 <img src="https://github.com/babydr4gon/school_miner/blob/assets/images/Browser.jpg" alt="Kontrolle" width="650" height="650"/>
