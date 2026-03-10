@@ -55,7 +55,8 @@ DEFAULT_CONFIG = {
     "INPUT_FILE": "schulen.xlsx",
     "OUTPUT_FILE": "schulen_ergebnisse.xlsx",
     "MAP_FILE": "schulen_karte.html",
-    "MODEL_NAME": "gemini-1.5-flash",  # Standardwert
+    "MODEL_NAME": "gemini-2.0-flash-exp",  
+    "MAP_DELAY": 1.7,  
     "COLUMN_NAME_IDX": 0,
     "COLUMN_ORT_IDX": 2,
     "GEMINI_MODEL": "gemini-2.0-flash-exp", 
@@ -570,10 +571,10 @@ def ki_analyse(context_text, config, api_keys):
 # --- MAP GENERATION ---
 
 @st.cache_data(show_spinner=False)
-def get_coordinates(name, ort):
+def get_coordinates(name, ort, delay=1.5):
     """
     Holt die Koordinaten und speichert sie im Cache. 
-    Pausiert (time.sleep) NUR bei echten API-Aufrufen!
+    Pause nur bei echten API-Aufrufen um den MAP_DELAY Wert
     """
     geolocator = Nominatim(user_agent="schul_scanner_st_cache")
     try:
@@ -581,15 +582,15 @@ def get_coordinates(name, ort):
         loc = geolocator.geocode(f"{clean_name}, {ort}, Germany", timeout=5)
         
         if loc:
-            time.sleep(1.2) # Höflichkeitspause nach echtem Request
+            time.sleep(delay) # <-- Dynamische Pause
             return loc.latitude, loc.longitude, False
         
-        time.sleep(1.2) # Pause vor dem Fallback-Request
+        time.sleep(delay) # <-- Dynamische Pause
         loc_city = geolocator.geocode(f"{ort}, Germany", timeout=5)
         if loc_city:
             lat = loc_city.latitude + random.uniform(-0.015, 0.015)
             lon = loc_city.longitude + random.uniform(-0.015, 0.015)
-            time.sleep(2.2)
+            time.sleep(delay) # <-- Dynamische Pause
             return lat, lon, True
             
     except Exception as e:
@@ -621,22 +622,24 @@ def generate_folium_map(data):
     total = len(data)
     
     for i, entry in enumerate(data):
-        name = entry.get('schulname', '')
-        ort = entry.get('ort', '')
+        # in String umwandeln und Leerzeichen entfernen
+        name = str(entry.get('schulname', '')).strip()
+        ort = str(entry.get('ort', '')).strip()
         
-        # NEUER FILTER: Nur überspringen, wenn gar kein Schulname existiert
-        if not name: 
+        # Überspringen, wenn leer oder 'nan'
+        if not name or name.lower() == 'nan': 
             my_bar.progress((i + 1) / total, text="Überspringe leeren Eintrag...")
             continue
             
         my_bar.progress((i + 1) / total, text=f"Platziere {name}...")
         
-        # --- CACHE-ABFRAGE STATT DIREKTEM AUFRUF ---
-        lat, lon, is_approx = get_coordinates(name, ort)
+        # CACHE-ABFRAGE
+        map_delay = st.session_state.config.get("MAP_DELAY", 1.5)
+        lat, lon, is_approx = get_coordinates(name, ort, map_delay)
         
         if not lat or not lon: continue
 
-        # --- DATEN VORBEREITEN ---
+        # DATEN VORBEREITEN 
         schultyp = str(entry.get('schultyp', 'Unbekannt'))
         ki = str(entry.get('ki_zusammenfassung', 'Keine Analyse'))
         kw = str(entry.get('keywords', '-'))
@@ -822,7 +825,16 @@ def main():
         )
      
     # Sensitivity
-    config["SENSITIVITY"] = st.sidebar.selectbox("Sensibilität", ["normal", "strict"], index=0 if config["SENSITIVITY"]=="normal" else 1, help="'strict' prüft auf 'Wir sind eine Schule' Sätze.")
+    config["SENSITIVITY"] = st.sidebar.selectbox("Sensibilität", ["normal", "strict"], index=0 if config["SENSITIVITY"]=="normal" else 1)
+    
+    # <-- NEU: Map Delay Slider -->
+    config["MAP_DELAY"] = st.sidebar.slider(
+        "Pause Kartengenerierung (Sek.)", 
+        min_value=1.0, max_value=5.0, 
+        value=float(config.get("MAP_DELAY", 1.5)), 
+        step=0.1,
+        help="Nominatim erlaubt max. 1 Anfrage/Sekunde. Bei Fehler 429 diesen Wert erhöhen."
+    )
     
     # Keyword Editor
     with st.sidebar.expander("📝 Keywords"):
