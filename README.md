@@ -67,6 +67,8 @@ Alternativ einen Terminal / eine Eingabeaufforderung öffnen und in den Ordner w
    ```
 
 Hinweis: Beim ersten Start werden alle nötigen Bibliotheken geladen. Das kann 1–2 Minuten dauern. Danach ploppt der Browser mit dem Dashboard auf. Falls der Browser sich nicht automatisch öffnet, muss man die angegebene Netzwerkadresse (127.0.0.. etc.) manuell in einen Browser kopieren.
+
+Falls eine Firewall die Nutzung der Netzwerkadresse blockiert, muss man sich entscheiden, ob man sich zutraut, die Firewalleinstellung zu ändern. Alternativ gibt es die  <a href="https://github.com/babydr4gon/school_miner">Kommandozeilenversion</a> des Programms, da taucht das Problem nicht auf.
    
 <h1>Nutzung</h1>
 
@@ -133,6 +135,16 @@ Schulwebseiten zu scannen ist eine Herausforderung. Viele dieser Seiten sind ent
 **Eine andere KI ausprobieren:** Das Programm bietet die Möglichkeit, zwischen unterschiedlichen KI-Anbietern und Modellen zu wechseln. Dabei können sehr unterschiedliche Antworten herauskommen.
 
 **Viele beige Marker auf der Landkarte:** Wahrscheinlich sind viele Schulen noch ohne Schultyp und werden dann den anderen Farben nicht zugeordnet. Da hilft nur eine manuelle Kontrolle oder ein ganz neuer Autoscan.
+
+<h1>Deinstallation</h1>
+
+Wer das Programm über die beiliegenden Start-Skripte (.bat für Windows oder .sh für Linux) genutzt hat, muss einfach nur den gesamten Projektordner löschen.
+
+Fortgeschrittene Nutzer, die das Programm manuell über das Terminal installiert haben: Wer die Module händisch ohne virtuelle Umgebung installiert hat, bei dem liegen diese im globalen Python-Ordner des Systems. Um sie zu entfernen, einen Terminal in diesem Ordner öffnen und folgenden Befehl eingeben, und zwar bevor der Projektordner gelöscht wird:
+
+  ```bash
+  pip uninstall -r requirements.txt -y
+   ```
 
 <h1>Kauf mir einen Kaffee! </h1>
 Wem diese Arbeit gefallen hat oder wer einfach nur einen Nutzen von dem Programm hat, der darf mir gerne einen Kaffee kaufen :-). Ich freue mich darüber.
