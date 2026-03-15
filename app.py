@@ -63,6 +63,7 @@ DEFAULT_CONFIG = {
     "OPENROUTER_MODEL": "meta-llama/llama-3.3-70b-instruct", 
     "GROQ_MODEL": "llama-3.3-70b-versatile",
     "WAIT_TIME": 2.0, 
+    "HEADLESS": True,
     "SENSITIVITY": "normal", 
     "SCHULTYPEN_LISTE": DEFAULT_SCHULTYPEN,
     "KEYWORD_LISTE": DEFAULT_HARD_KEYWORDS,
@@ -270,11 +271,13 @@ def sanitize_dataframe(df):
     return df
     
 # --- SELENIUM DRIVER ---
-def get_driver():
-    """
-    Initialisiert den Chrome/Chromium Treiber für Windows und Linux (inkl. Raspberry Pi).
-    """
-    chrome_options = Options()
+def get_driver(headless=True):
+    chrome_options = Options()    
+    
+    if headless:
+        chrome_options.add_argument("--headless=new") 
+        
+    chrome_options.add_argument("--no-sandbox")
     
     chrome_options.add_argument("--headless=new") 
     chrome_options.add_argument("--no-sandbox")
@@ -717,8 +720,11 @@ def sync_config():
     st.session_state.config["PROMPT_TEMPLATE"] = st.session_state.prompt_key
     kw_raw = st.session_state.keywords_key
     st.session_state.config["KEYWORD_LISTE"] = [k.strip() for k in kw_raw.split(",") if k.strip()]
-    
+    if "headless_key" in st.session_state:
+        st.session_state.config["HEADLESS"] = st.session_state.headless_key
+        
     save_config(st.session_state.config)
+    
     st.toast("Einstellungen gespeichert!", icon="🤖")
 
 # --- MAIN APP LOGIC ---
@@ -752,7 +758,15 @@ def main():
             save_dataframe(st.session_state.df, config)
     
     # Systemcheck ---
-    with st.sidebar.expander("🛠️ System-Status", expanded=True):
+    with st.sidebar.expander("🛠️ System & Browser", expanded=False):
+        st.checkbox(
+            "Browser im Hintergrund", 
+            value=config.get("HEADLESS", True),
+            key="headless_key",
+            on_change=sync_config,
+            help="Entferne den Haken, um dem Browser live beim Scannen zuzusehen."
+        )
+    
         env = check_environment()
         if env["chrome"]:
             st.success("Browser: Installiert ✅")
@@ -982,7 +996,7 @@ def main():
             driver = None
             try:
                 status_text.write("🌐 Initialisiere Browser...")
-                driver = get_driver()
+                driver = get_driver(headless=config.get("HEADLESS", True))
                 
                 if driver:
                     for i in range(st.session_state.current_scan_idx, total_rows):
@@ -1099,7 +1113,7 @@ def main():
                 with c2:
                     if st.button("🔍 Deep Scan (KI)", width="stretch"):
                         
-                        driver = get_driver()
+                        driver = get_driver(headless=config.get("HEADLESS", True))
                         if driver:
                            st.info(f"Analysiere: {new_url}")
                            u, t, k, c = crawl_and_analyze(driver, new_url, new_ort, config) 
