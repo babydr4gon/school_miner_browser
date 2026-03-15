@@ -299,6 +299,7 @@ def get_driver():
             "/usr/lib/chromium-browser/chromedriver",
             "/usr/lib/chromium/chromedriver", # Alternative für manche Distributionen
             "/snap/bin/chromium.chromedriver"
+            "/usr/bin/chromium-browser"
         ]
         
         found_path = next((p for p in paths if os.path.exists(p)), None)
@@ -616,6 +617,16 @@ def generate_folium_map(data):
      </div>
      '''
     m.get_root().html.add_child(Element(legend_html))
+    
+    # --- DATUMS-STEMPEL (TITEL) ---
+    current_date = time.strftime("%d.%m.%Y")
+    title_html = f'''
+     <div style="position: fixed; top: 15px; left: 60px; width: auto; height: auto; z-index:9999; font-size:16px; background-color:white; opacity:0.95; padding: 10px 15px; border: 2px solid grey; border-radius: 5px; box-shadow: 2px 2px 5px rgba(0,0,0,0.3);">
+     <b style="color: #333;">🗺️ Interaktive Schulkarte</b><br>
+     <span style="font-size:12px; color: #666;"><i>Datenstand: {current_date}</i></span>
+     </div>
+     '''
+    m.get_root().html.add_child(Element(title_html))
 
     progress_text = "Platziere Marker auf der Karte (nutze Cache, falls vorhanden)..."
     my_bar = st.progress(0, text=progress_text)
