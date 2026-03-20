@@ -184,9 +184,9 @@ def sync_logic(existing_df, config):
         # WICHTIG: header=None, genau wie in der CLI!
         df_raw = pd.read_excel(config["INPUT_FILE"], header=None, engine='openpyxl')
         
-        # Bestehende Schulen ermitteln (nur nach Name, wie in der CLI)
-        if not existing_df.empty and 'schulname' in existing_df.columns:
-            existing = set(existing_df['schulname'].astype(str).str.strip())
+        # Wir merken uns Kombination aus Name UND Ort
+        if not existing_df.empty and 'schulname' in existing_df.columns and 'ort' in existing_df.columns:
+            existing = set(zip(existing_df['schulname'].astype(str).str.strip(), existing_df['ort'].astype(str).str.strip()))
         else:
             existing = set()
         
@@ -201,8 +201,8 @@ def sync_logic(existing_df, config):
             n = str(row[config["COLUMN_NAME_IDX"]]).strip()
             ort = str(row[config["COLUMN_ORT_IDX"]]).strip()
             
-            # exakte CLI-Bedingung:
-            if len(n) > 4 and "schule" in n.lower() and "=" not in n and n not in existing:
+            # KORREKTUR: "schule" Bedingung entfernt. Duplikat-Check mit (n, ort)
+            if len(n) > 4 and "=" not in n and (n, ort) not in existing:
                 new_rows.append({
                     'schulname': n,
                     'ort': ort,
@@ -211,7 +211,7 @@ def sync_logic(existing_df, config):
                     'keywords': "",
                     'ki_zusammenfassung': "Keine Daten"
                 })
-                existing.add(n)
+                existing.add((n, ort))
                 added_count += 1
         
         if new_rows:
@@ -287,7 +287,15 @@ def get_driver(headless=True):
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--log-level=3") 
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-
+    
+    # DOWNLOADS KOMPLETT BLOCKIEREN
+    prefs = {
+        "download_restrictions": 3,              # 3 = Blockiert ausnahmslos alle Downloads
+        "download.prompt_for_download": False,   # Verhindert Pop-ups
+        "plugins.always_open_pdf_externally": False # Verhindert, dass PDFs an externe Viewer geschickt werden
+    }
+    chrome_options.add_experimental_option("prefs", prefs)
+    
     driver = None
     
     # --- STRATEGIE 1: ChromeDriverManager (Standard für Windows/Mac) ---
