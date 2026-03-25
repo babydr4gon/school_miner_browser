@@ -350,21 +350,18 @@ def search_ddg_robust(query):
     return None
 
 def get_selenium_content(driver, url, wait_time=2.0):
-    """Lädt die Seite, scrollt für Lazy-Loading und extrahiert Text/Links."""
+    """Lädt die Seite, scrollt für Lazy-Loading und extrahiert Text/Links (auch versteckte!)."""
     try:
         driver.get(url)
-        
-        # 1. Kurz warten für den initialen Load
         time.sleep(wait_time / 2)
-        
-        # 2. Einmal nach unten scrollen, um Lazy-Loading auszulösen
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        
-        # 3. Restliche Wartezeit absitzen, damit Menüs/Bilder nachladen können
         time.sleep(wait_time / 2)
         
         title = driver.title
-        body = driver.find_element(By.TAG_NAME, "body").text
+        body_text = driver.find_element(By.TAG_NAME, "body").text
+        
+        kombinierter_text = f"{title}\n\n{body_text}"
+        
         links = []
         
         for elem in driver.find_elements(By.TAG_NAME, "a"):
@@ -375,7 +372,7 @@ def get_selenium_content(driver, url, wait_time=2.0):
             except: 
                 continue
                 
-        return title, body, links
+        return title, body, kombinierter_text, links
     except Exception as e: 
         return "", "", []
 
